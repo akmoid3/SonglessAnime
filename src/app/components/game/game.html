@@ -1,0 +1,226 @@
+﻿<div class="min-h-screen bg-[#191919] text-white flex flex-col items-center py-6 font-sans">
+  <!-- Header -->
+  <div class="w-full flex justify-between items-center px-6 mb-6 max-w-4xl">   
+    <h1 class="text-4xl font-extrabold tracking-tighter">Songless Anime</h1>
+    
+    <!-- Volume as the right icon -->
+    <div class="group relative flex justify-end">
+      <button class="w-10 h-10 rounded-full border border-gray-600 flex flex-col items-center justify-center text-gray-400 hover:text-white hover:border-gray-400 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z" />
+        </svg>
+      </button>
+      <div class="absolute pt-6 right-0 top-4 hidden group-hover:block z-50">
+        <div class="bg-[#222] p-4 rounded shadow-xl border border-[#333]">
+          <input type="range" min="0" max="1" step="0.01" [(ngModel)]="volume" (ngModelChange)="onVolumeChange()" class="w-28 cursor-pointer">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mode Selector -->
+  <div class="w-full max-w-lg px-4 mb-8 text-center flex justify-center mx-auto">
+    <div class="flex bg-[#222] rounded-lg p-1 w-full text-sm font-semibold border border-[#333] shadow-md">
+      <button (click)="setMode('random')"
+              [ngClass]="{'bg-[#4caf50] text-white shadow-sm': mode === 'random', 'text-gray-400 hover:text-white': mode !== 'random'}" 
+              class="flex-1 py-2 rounded-md transition-colors">
+        Random
+      </button>
+      <button (click)="setMode('top')"
+              [ngClass]="{'bg-[#4caf50] text-white shadow-sm': mode === 'top', 'text-gray-400 hover:text-white': mode !== 'top'}" 
+              class="flex-1 py-2 rounded-md transition-colors mx-1">
+        Top Anime
+      </button>
+      <button (click)="setMode('seasonal')"
+              [ngClass]="{'bg-[#4caf50] text-white shadow-sm': mode === 'seasonal', 'text-gray-400 hover:text-white': mode !== 'seasonal'}" 
+              class="flex-1 py-2 rounded-md transition-colors">
+        Seasonal
+      </button>
+    </div>
+  </div>
+
+  <div class="w-full max-w-2xl flex-1 flex flex-col px-4">
+    <!-- Loading State -->
+    <div *ngIf="gameStatus === 'loading'" class="flex-1 flex flex-col items-center justify-center py-8">
+      <div class="w-12 h-12 border-4 border-[#333] border-t-[#4caf50] rounded-full animate-spin mb-4"></div>
+      <p class="text-gray-400 font-semibold tracking-wide">Loading Anime Database...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="gameStatus === 'error'" class="flex-1 flex flex-col items-center justify-center py-8 text-center">
+      <svg class="h-12 w-12 text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <p class="text-red-400 font-bold mb-2">Error connecting to database</p>
+      <p class="text-sm text-gray-400 mb-6">{{ errorMessage }}</p>
+      <button (click)="retryLoad()" class="px-6 py-2 bg-[#4caf50] text-white rounded font-bold uppercase transition-colors">
+        Retry
+      </button>
+    </div>
+
+    <!-- Playing State -->
+    <div *ngIf="gameStatus === 'playing'" class="flex-1 flex flex-col w-full max-w-2xl mx-auto relative">
+      
+      <!-- Round Info -->
+      <div class="flex justify-between items-center text-gray-400 font-bold text-sm tracking-widest uppercase mb-4 px-4 w-full">
+         <div>Round <span class="text-white">{{ currentRound }} <span class="opacity-50">/</span> {{ maxRounds }}</span></div>
+         <div>Score <span class="text-[#4caf50]">{{ score }}</span></div>
+      </div>
+
+      <!-- Guess List -->
+      <div class="w-full flex flex-col items-center justify-start space-y-3 mb-10">
+        <div *ngFor="let item of [].constructor(maxLevels); let i = index" 
+             class="h-10 w-full max-w-xl rounded flex items-center justify-center font-semibold text-[13px] tracking-wide transition-colors px-4 truncate"
+             [ngClass]="{
+               'bg-[#303030] text-gray-200': i < level - 1 && guesses[i] === 'Skipped',
+               'bg-red-600 text-white': i < level - 1 && guesses[i] !== 'Skipped',
+               'border border-[#303030] bg-transparent': i >= level - 1
+             }">
+             <ng-container *ngIf="i < level - 1">
+               {{ guesses[i] === 'Skipped' ? 'Skipped' : guesses[i] }}
+             </ng-container>
+        </div>
+      </div>
+      
+      <!-- Progress Line -->
+      <div class="w-full mb-12 relative px-4">
+        <!-- Floating time indicator (caret) -->
+        <div class="w-full relative h-0">
+          <div class="absolute -top-[30px] whitespace-nowrap text-[15px] font-bold text-white flex flex-col items-center transform -translate-x-1/2 transition-all duration-300 z-30"
+               [style.left.%]="(getPlayDuration() / 15.0) * 100">
+            <span>{{ getPlayDuration() }} seconds</span>
+            <div class="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-t-white border-l-transparent border-r-transparent mt-[1px]"></div>
+          </div>
+        </div>
+
+        <!-- Duration segmented bar -->
+        <div class="w-full h-[14px] bg-[#2a2a2a] rounded-sm flex select-none relative overflow-hidden">
+          <div class="absolute top-0 left-0 h-full bg-[#4caf50] z-10 transition-all duration-75"
+               [style.width.%]="(currentTime / 15.0) * 100">
+          </div>
+          
+          <div class="h-full border-r border-[#191919] z-20" style="width: 0.66%"></div>
+          <div class="h-full border-r border-[#191919] z-20" style="width: 2.66%"></div>
+          <div class="h-full border-r border-[#191919] z-20" style="width: 10%"></div>
+          <div class="h-full border-r border-[#191919] z-20" style="width: 13.33%"></div>
+          <div class="h-full border-r border-[#191919] z-20" style="width: 26.66%"></div>
+          
+          <div class="absolute top-0 left-0 h-full bg-[#444] z-0 transition-all duration-300"
+               [style.width.%]="(getPlayDuration() / 15.0) * 100">
+          </div>
+        </div>
+      </div>
+
+      <!-- Play Button Area -->
+      <div class="flex justify-center mb-10 pt-2">
+        <button (click)="togglePlay()" 
+                class="w-16 h-16 rounded-full flex flex-col items-center justify-center transition-all bg-[#4caf50] hover:bg-[#45a049] text-white cursor-pointer relative overflow-hidden focus:outline-none">
+          <ng-container *ngIf="isBuffering; else iconState">
+            <div class="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+          </ng-container>
+
+          <ng-template #iconState>
+            <ng-container *ngIf="isPlaying; else playIcon">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                 <rect x="6" y="5" width="4" height="14" rx="1"></rect>
+                 <rect x="14" y="5" width="4" height="14" rx="1"></rect>
+              </svg>
+            </ng-container>
+            <ng-template #playIcon>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 ml-1 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </ng-template>
+          </ng-template>
+        </button>
+      </div>
+
+      <!-- Search Area -->
+      <div class="w-full flex items-center justify-center gap-2 mb-4">
+         <div class="relative w-full max-w-lg">
+            <div class="flex items-center bg-[#222222] border-[1.5px] border-transparent focus-within:border-[#333] rounded px-4 py-3 h-[52px] transition-colors relative"
+                 [ngClass]="{'border-red-500': showWrongFeedback}">
+              <svg class="h-5 w-5 text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input type="text"
+                     [(ngModel)]="guess"
+                     (ngModelChange)="onSearchChange()"
+                     (focus)="onSearchChange()"
+                     class="flex-1 bg-transparent text-white focus:outline-none placeholder-gray-500 font-medium text-[15px]"
+                     placeholder="Search an anime...">
+            </div>
+            
+            <ul *ngIf="filteredNames.length > 0" 
+                class="absolute bottom-full mb-2 w-full bg-[#222] border border-[#333] shadow-2xl max-h-60 overflow-y-auto z-50 text-left rounded-md">
+              <li *ngFor="let name of filteredNames" 
+                  (click)="selectGuess(name)"
+                  class="px-4 py-3 hover:bg-[#333] cursor-pointer text-sm font-medium border-b border-[#333] last:border-b-0 text-white truncate">
+                {{ name }}
+              </li>
+            </ul>
+         </div>
+      </div>
+      <div class="flex justify-center gap-3 w-full max-w-lg mx-auto">
+        <button (click)="skip()" class="px-6 h-[46px] w-[130px] bg-[#333] hover:bg-[#444] text-white font-semibold rounded text-sm transition-colors whitespace-nowrap">
+          {{ level === maxLevels ? 'Give up' : 'Skip' }}
+        </button>
+        <button (click)="submitGuess()" 
+                [disabled]="!hasSelectedGuess"
+                class="px-6 h-[46px] w-[130px] font-semibold rounded text-sm transition-colors whitespace-nowrap"
+                [ngClass]="hasSelectedGuess ? 'bg-[#4caf50] hover:bg-[#439e47] text-white' : 'bg-gray-600 text-gray-400 cursor-not-allowed'">
+          Submit
+        </button>
+      </div>
+    </div>
+
+    <!-- Win / Lose State -->
+    <div *ngIf="gameStatus === 'won' || gameStatus === 'lost'" class="flex-1 flex flex-col items-center justify-center px-4 text-center mt-4">
+      <h2 class="text-3xl font-extrabold tracking-tight mb-2" [ngClass]="gameStatus === 'won' ? 'text-[#4caf50]' : 'text-red-500'">
+        {{ gameStatus === 'won' ? 'Correct' : 'Game Over' }}
+      </h2>
+      
+      <div class="flex flex-col items-center bg-[#222] border border-[#333] rounded-lg p-6 mb-8 shadow-2xl w-full max-w-sm mt-6">
+        <div class="w-48 h-48 bg-[#111] rounded overflow-hidden shadow-lg mb-4 relative flex items-center justify-center">
+          <img *ngIf="currentSong?.imageUrl" [src]="currentSong?.imageUrl" alt="Anime Poster" class="w-full h-full object-cover">
+          <div *ngIf="!currentSong?.imageUrl" class="text-gray-600">No Image</div>
+        </div>
+        
+        <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Anime</p>
+        <p class="text-xl font-bold text-white mb-4 leading-tight">{{ currentSong?.name }}</p>
+        
+        <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Song</p>
+        <p class="text-md font-semibold text-gray-300 mb-1 leading-tight">{{ currentSong?.songTitle }}</p>
+        <p class="text-sm text-gray-500">{{ currentSong?.artist }}</p>
+      </div>
+      
+      <button (click)="playNextSongInRound()" 
+              class="w-full max-w-sm bg-white text-black hover:bg-gray-200 py-3 font-bold rounded transition-colors text-lg">
+        Play Next
+      </button>
+    </div>
+
+    <!-- Finished State (Score) -->
+    <div *ngIf="gameStatus === 'finished'" class="flex-1 flex flex-col items-center justify-center px-4 text-center mt-4">
+      <h2 class="text-4xl font-extrabold tracking-tight mb-4 text-[#4caf50]">
+        Round Complete
+      </h2>
+      
+      <div class="flex flex-col items-center bg-[#222] border border-[#333] rounded-lg p-8 mb-8 shadow-2xl w-full max-w-sm mt-6">
+        <p class="text-sm text-gray-400 font-bold uppercase tracking-wider mb-2">Final Score</p>
+        <div class="text-7xl font-black text-white mb-4">
+          {{ score }}<span class="text-4xl text-gray-500">/{{ maxRounds }}</span>
+        </div>
+        <p class="text-sm text-gray-400 mt-2">
+          {{ score === maxRounds ? 'Perfect!' : score > maxRounds / 2 ? 'Great job!' : 'Better luck next time!' }}
+        </p>
+      </div>
+      
+      <button (click)="restartGame()" 
+              class="w-full max-w-sm bg-[#4caf50] text-white hover:bg-[#45a049] py-3 font-bold rounded transition-colors text-lg">
+        Play Again
+      </button>
+    </div>
+
+  </div>
+</div>
