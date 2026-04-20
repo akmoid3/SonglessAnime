@@ -13,16 +13,18 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
   styleUrls: ['./game.scss']
 })
 export class Game implements OnInit, OnDestroy {
-  mode: 'random' | 'top' | 'seasonal' = 'random';
+  mode: 'random' | 'top' | 'seasonal' | 'anilist' = 'anilist';
+  anilistUsername: string = '';
+  isAnilistLoading: boolean = false;
   
   currentSong: AnimeSong | null = null;
-  allAnimeNames: string[] = []; // Nomi locali dei 30 attuali
+  localAnimeData: {name: string, synonyms: string[], imageUrl: string}[] = [];
   guesses: string[] = [];
   
   level: number = 1;
   maxLevels: number = 6;
   guess: string = '';
-  filteredNames: string[] = [];
+  filteredNames: {title: string, imageUrl: string}[] = [];
   hasSelectedGuess: boolean = false;
   
   private searchSubject = new Subject<string>();
@@ -41,6 +43,7 @@ export class Game implements OnInit, OnDestroy {
   isPlaying: boolean = false;
   isBuffering: boolean = false;
   showWrongFeedback: boolean = false;
+  showCloseFeedback: boolean = false;
   
   private audio: HTMLAudioElement | null = null;
   private progressInterval: any;
@@ -53,20 +56,37 @@ export class Game implements OnInit, OnDestroy {
     
     // Inizializza il motore di ricerca online con RxJS
     this.searchSubscription = this.searchSubject.pipe(
-      debounceTime(300),
+      debounceTime(500),
       distinctUntilChanged(),
       switchMap(term => this.songService.searchAnime(term))
     ).subscribe(nomi => {
       // Includiamo anche i risultati locali per garantire che la risposta corretta sia trovabile
       const termLower = this.guess.trim().toLowerCase();
-      let combined = new Set([
-          ...this.allAnimeNames.filter(n => n.toLowerCase().includes(termLower)),
-          ...nomi
-      ]);
+      const localMatches: {title: string, imageUrl: string}[] = [];
       
-      this.filteredNames = Array.from(combined).sort((a, b) => {
-        const aLower = a.toLowerCase();
-        const bLower = b.toLowerCase();
+      this.localAnimeData.forEach(a => {
+        if (a.name.toLowerCase().includes(termLower)) {
+          localMatches.push({title: a.name, imageUrl: a.imageUrl});
+        } else if (a.synonyms && a.synonyms.some(syn => syn.toLowerCase().includes(termLower))) {
+          // Se un sinonimo matcha, suggerisci il VERO NOME DELL'ANIME (es. DanMachi -> Dungeon ni Deai...)
+          localMatches.push({title: a.name, imageUrl: a.imageUrl});
+        }
+      });
+
+      // Mappa per unire e rimuovere i duplicati in base al titolo
+      const combinedMap = new Map<string, {title: string, imageUrl: string}>();
+      
+      localMatches.forEach(item => combinedMap.set(item.title, item));
+      nomi.forEach(item => {
+        // Se esiste già lo aggiorno solo se il nuovo ha l'immagine e il vecchio no
+        if (!combinedMap.has(item.title) || (!combinedMap.get(item.title)?.imageUrl && item.imageUrl)) {
+          combinedMap.set(item.title, item);
+        }
+      });
+
+      this.filteredNames = Array.from(combinedMap.values()).sort((a, b) => {
+        const aLower = a.title.toLowerCase();
+        const bLower = b.title.toLowerCase();
         const aStarts = aLower.startsWith(termLower);
         const bStarts = bLower.startsWith(termLower);
         
@@ -81,9 +101,28 @@ export class Game implements OnInit, OnDestroy {
     this.loadSongsForGame(this.mode);
   }
 
-  setMode(newMode: 'random' | 'top' | 'seasonal'): void {
-    if (this.mode === newMode) return;
+  setMode(newMode: 'random' | 'top' | 'seasonal' | 'anilist'): void {
+    if (this.mode === newMode && newMode !== 'anilist') return;
     this.mode = newMode;
+
+    if (newMode === 'anilist') {
+      this.isAnilistLoading = false;
+    }
+    
+    // Se è AniList, non facciamo ripartire subito, aspettiamo che l'utente inserisca l'username e prema Play.
+    if (newMode !== 'anilist') {
+      this.restartGame();
+    } else {
+      // Ferma eventuali giocate correnti se passa ad AniList
+      this.stopAudio();
+      this.gameStatus = 'loading'; // O mettiamo uno stato apposito, per ora mostriamo il form nel template
+      this.cdr.detectChanges();
+    }
+  }
+
+  startAnilistGame(): void {
+    if (!this.anilistUsername.trim()) return;
+    this.isAnilistLoading = true;
     this.restartGame();
   }
 
@@ -96,15 +135,27 @@ export class Game implements OnInit, OnDestroy {
     this.loadSongsForGame(this.mode);
   }
 
-  private loadSongsForGame(mode: 'random' | 'top' | 'seasonal'): void {
-    this.songService.loadSongs(30, mode).subscribe({
+  private loadSongsForGame(mode: 'random' | 'top' | 'seasonal' | 'anilist'): void {
+    if (mode === 'anilist' && !this.anilistUsername.trim()) {
+       // Se siamo in modalità AniList ma manca l'username, non far partire la ricerca.
+       return;
+    }
+    
+    const requestedMode = mode;
+
+    this.songService.loadSongs(30, mode, this.anilistUsername).subscribe({
       next: (success) => {
+        if (this.mode !== requestedMode) {
+          this.cdr.detectChanges();
+          return;
+        }
         console.log('loadSongs resolved with success =', success);
         if (!success || this.songService.errorMessage || !this.songService.isSongsReady()) {
           this.gameStatus = 'error';
           this.errorMessage = this.songService.errorMessage || `No songs found for ${mode} mode.`;
         } else {
-          this.allAnimeNames = this.songService.getAllSongNames();
+          this.localAnimeData = this.songService.getLocalAnimeData();
+          this.maxRounds = Math.min(10, Math.max(1, this.localAnimeData.length));
           this.currentRound = 1;
           this.score = 0;
           this.startNewGame();
@@ -312,10 +363,18 @@ export class Game implements OnInit, OnDestroy {
     if (this.gameStatus !== 'playing') return;
     if (!this.guess.trim() || !this.hasSelectedGuess) return;
     
-    if (this.guess.toLowerCase() === this.currentSong?.name.toLowerCase()) {
+    const guessedName = this.guess.toLowerCase().trim();
+    const correctName = (this.currentSong?.name || '').toLowerCase().trim();
+    const synonyms = (this.currentSong?.synonyms || []).map(s => s.toLowerCase().trim());
+
+    if (guessedName === correctName || synonyms.includes(guessedName)) {
       this.guesses.push(this.guess);
       this.score++; // INCREMENT SCORE!
       this.gameStatus = 'won';
+    } else if (this.isCloseGuess(this.guess)) {
+      this.guesses.push(this.guess);
+      this.triggerCloseFeedback();
+      this.wrongGuessOrSkip();
     } else {
       this.guesses.push(this.guess);
       this.triggerWrongFeedback();
@@ -323,10 +382,37 @@ export class Game implements OnInit, OnDestroy {
     }
   }
 
+  isCloseGuess(guess: string): boolean {
+    if (!guess || !this.currentSong?.name) return false;
+    const guessedName = guess.toLowerCase().trim();
+    const correctName = this.currentSong.name.toLowerCase().trim();
+    const synonyms = (this.currentSong?.synonyms || []).map(s => s.toLowerCase().trim());
+
+    if (guessedName === correctName || synonyms.includes(guessedName)) return false;
+
+    if (guessedName.length > 2 && (correctName.startsWith(guessedName) || guessedName.startsWith(correctName))) return true;
+
+    for (const syn of synonyms) {
+      if (guessedName.length > 2 && (syn.startsWith(guessedName) || guessedName.startsWith(syn))) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   skip(): void {
     if (this.gameStatus !== 'playing') return;
     this.guesses.push('Skipped');
     this.wrongGuessOrSkip();
+  }
+
+  private triggerCloseFeedback(): void {
+    this.showCloseFeedback = true;
+    setTimeout(() => {
+      this.showCloseFeedback = false;
+      this.cdr.detectChanges();
+    }, 1500);
   }
 
   private triggerWrongFeedback(): void {

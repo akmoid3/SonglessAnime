@@ -1,5 +1,5 @@
 export const TOP_ANIME = [
-    "Shingeki no Kyojin",
+  "Shingeki no Kyojin",
   "Death Note",
   "Fullmetal Alchemist: Brotherhood",
   "One Punch Man",

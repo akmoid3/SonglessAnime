@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, map, of, tap, timeout, forkJoin } from 'rxjs';
+import { Observable, catchError, map, of, tap, timeout, forkJoin, switchMap } from 'rxjs';
 
 export interface AnimeSong {
   id: string;
@@ -9,6 +9,7 @@ export interface AnimeSong {
   songTitle?: string;
   artist?: string;
   imageUrl?: string;
+  synonyms?: string[];
 }
 
 import { TOP_ANIME } from './top_anime';
@@ -26,80 +27,28 @@ export class SongService { private usedTopAnimes=new Set<string>();
 
   constructor(private http: HttpClient) {}
 
-  loadSongs(amount: number = 20, mode: 'random' | 'top' | 'seasonal' = 'random'): Observable<boolean> {
+  loadSongs(amount: number = 20, mode: 'random' | 'top' | 'seasonal' | 'anilist' = 'random', anilistUsername?: string): Observable<boolean> {
     this.isLoading = true;
     this.errorMessage = '';
 
     if (mode === 'top') {
       return this.loadTopAnime();
     }
-
-    let url = `https://api.animethemes.moe/animetheme?page[size]=${amount * 2}&filter[type]=OP&include=anime,anime.images,song,song.artists,animethemeentries.videos.audio`;
     
-    if (mode === 'seasonal') {
-      const year = new Date().getFullYear();
-      url = `https://api.animethemes.moe/anime?filter[year]=${year},${year-1}&sort=random&page[size]=${amount}&include=animethemes.animethemeentries.videos.audio,images,animethemes.song.artists`;
-      return this.executeDirectAnimeCall(url, amount);
-    } else {
-      url += `&sort=random`;
+    if (mode === 'anilist' && anilistUsername) {
+      return this.loadAnilistAnime(anilistUsername, amount);
     }
 
-    console.log('Fetching from:', url);
+    let url = '';
 
-    return this.http.get<any>(url)
-      .pipe(
-        timeout(10000),
-        map(response => {
-          const loadedSongs: AnimeSong[] = [];
-          if (response?.animethemes) {
-            for (const theme of response.animethemes) {
-              let audioUrl = '';
-              const animeName = theme.anime?.name || 'Unknown Anime';
+    if (mode === 'seasonal') {
+      const year = new Date().getFullYear();
+      url = `https://api.animethemes.moe/anime?filter[year]=${year},${year-1}&sort=random&page[size]=${amount}&include=animethemes.animethemeentries.videos.audio,images,animethemes.song.artists,animesynonyms`;
+    } else {
+      url = `https://api.animethemes.moe/anime?sort=random&page[size]=${amount * 3}&include=animethemes.animethemeentries.videos.audio,images,animethemes.song.artists,animesynonyms`;
+    }
 
-              if (theme.animethemeentries?.length > 0) {
-                const entry = theme.animethemeentries[0];
-                if (entry.videos?.length > 0) {
-                    const video = entry.videos[0];
-                    // USE .ogg AUDIO FOR ZERO DELAY AND -90% BANDWIDTH
-                    audioUrl = video.audio?.link || video.link;
-                }
-              }
-
-              if (audioUrl) {
-                // Get additional rich data for end card
-                const images = theme.anime?.images || [];
-                const largeCover = images.find((i: any) => i.facet === 'Large Cover') || images[0];
-                const songTitle = theme.song?.title || 'Unknown Title';
-                const artists = theme.song?.artists?.map((a: any) => a.name).join(', ') || 'Unknown Artist';
-
-                loadedSongs.push({
-                  id: theme.id.toString(),
-                  name: animeName,
-                  url: audioUrl,
-                  songTitle: songTitle,
-                  artist: artists,
-                  imageUrl: largeCover?.link || ''
-                });
-              }
-            }
-          }
-          return loadedSongs;
-        }),
-        tap(loadedSongs => {
-          console.log(`Loaded ${loadedSongs.length} Opening songs.`);
-          const uniqueSet = new Set(); this.songs = loadedSongs.filter(s => { if(uniqueSet.has(s.url)){ return false; } uniqueSet.add(s.url); return true; });
-          this.unplayedSongs = [...this.songs];
-          this.isReady = true;
-          this.isLoading = false;
-        }),
-        map(loadedSongs => loadedSongs.length > 0),
-        catchError(error => {
-          console.error('Error loading anime themes', error);
-          this.errorMessage = error.message || 'Failed to load songs.';
-          this.isLoading = false;
-          return of(false);
-        })
-      );
+    return this.executeDirectAnimeCall(url, amount);
   }
 
   private executeDirectAnimeCall(url: string, amount: number): Observable<boolean> {
@@ -142,6 +91,7 @@ export class SongService { private usedTopAnimes=new Set<string>();
                 if (audioUrl) {
                   const songTitle = theme.song?.title || 'Unknown Title';
                   const artists = theme.song?.artists?.map((a: any) => a.name).join(', ') || 'Unknown Artist';
+                  const synonyms = animeData.animesynonyms?.map((s: any) => s.text) || [];
 
                   loaded.push({
                     id: theme.id.toString(),
@@ -149,7 +99,8 @@ export class SongService { private usedTopAnimes=new Set<string>();
                     url: audioUrl,
                     songTitle: songTitle,
                     artist: artists,
-                    imageUrl: largeCover?.link || ''
+                    imageUrl: largeCover?.link || '',
+                    synonyms: synonyms
                   });
                 }
               }
@@ -193,8 +144,85 @@ export class SongService { private usedTopAnimes=new Set<string>();
         topAnimeCopy.splice(idx, 1);
     }
 
-    const requests = randomTop.map(animeName => {
-      const url = `https://api.animethemes.moe/anime?filter[name]=${encodeURIComponent(animeName)}&include=animethemes.animethemeentries.videos.audio,images,animethemes.song.artists`;
+    return this.loadSpecificAnimeList(randomTop, 'Top anime');
+  }
+
+  private loadAnilistAnime(username: string, amount: number): Observable<boolean> {
+    const query = `
+      query ($userName: String) {
+        MediaListCollection(userName: $userName, type: ANIME, status: COMPLETED) {
+          lists {
+            entries {
+              media {
+                title {
+                  romaji
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    return this.http.post<any>('https://graphql.anilist.co', {
+      query: query,
+      variables: { userName: username }
+    }).pipe(
+      catchError(error => {
+        console.error('Error fetching AniList', error);
+        this.errorMessage = `Could not find AniList completions for user "${username}".`;
+        return of(null);
+      }),
+      switchMap(response => {
+        if (!response || !response.data || !response.data.MediaListCollection) {
+           this.errorMessage = this.errorMessage || `No completed anime found for "${username}".`;
+           this.isReady = true;
+           this.isLoading = false;
+           return of(false);
+        }
+        
+        let userAnimeTitles: string[] = [];
+        const lists = response.data.MediaListCollection.lists;
+        if (lists && lists.length > 0) {
+          lists.forEach((list: any) => {
+            if (list.entries) {
+              list.entries.forEach((entry: any) => {
+                if (entry.media?.title?.romaji) {
+                  userAnimeTitles.push(entry.media.title.romaji);
+                }
+              });
+            }
+          });
+        }
+
+        if (userAnimeTitles.length === 0) {
+           this.errorMessage = `No completed anime found for "${username}".`;
+           this.isReady = true;
+           this.isLoading = false;
+           return of(false);
+        }
+        
+        let maxToLoad = Math.min(amount || 15, userAnimeTitles.length, 20); // max 20 per evitare timeout
+        const randomPicks: string[] = [];
+        
+        let available = [...userAnimeTitles];
+        for (let i = 0; i < maxToLoad; i++) {
+          if(available.length === 0) break;
+          const idx = Math.floor(Math.random() * available.length);
+          randomPicks.push(available[idx]);
+          available.splice(idx, 1);
+        }
+        
+        console.log(`Chose ${randomPicks.length} random anime from ${username}'s list.`);
+        return this.loadSpecificAnimeList(randomPicks, `${username}'s AniList`);
+      })
+    );
+  }
+
+  // Metodo helper generalizzato usato sia da TopAnime che da AniList Anime
+  private loadSpecificAnimeList(animeNames: string[], listName: string): Observable<boolean> {
+    const requests = animeNames.map(animeName => {
+      const url = `https://api.animethemes.moe/anime?filter[name]=${encodeURIComponent(animeName)}&include=animethemes.animethemeentries.videos.audio,images,animethemes.song.artists,animesynonyms`;
       return this.http.get<any>(url).pipe(
         map(response => {
           const loaded: AnimeSong[] = [];
@@ -205,7 +233,6 @@ export class SongService { private usedTopAnimes=new Set<string>();
             const largeCover = images.find((i: any) => i.facet === 'Large Cover') || images[0];
 
             if (animeData.animethemes) {
-              // Extract only OPs, shuffle them, and pick only 1 random opening per anime to prevent monopoly
               let opThemes = animeData.animethemes.filter((t: any) => t.type === 'OP');
               
               const uniqueThemes = [];
@@ -232,6 +259,7 @@ export class SongService { private usedTopAnimes=new Set<string>();
                 if (audioUrl) {
                   const songTitle = theme.song?.title || 'Unknown Title';
                   const artists = theme.song?.artists?.map((a: any) => a.name).join(', ') || 'Unknown Artist';
+                  const synonyms = animeData.animesynonyms?.map((s: any) => s.text) || [];
 
                   loaded.push({
                     id: theme.id.toString(),
@@ -239,7 +267,8 @@ export class SongService { private usedTopAnimes=new Set<string>();
                     url: audioUrl,
                     songTitle: songTitle,
                     artist: artists,
-                    imageUrl: largeCover?.link || ''
+                    imageUrl: largeCover?.link || '',
+                    synonyms: synonyms
                   });
                 }
               }
@@ -254,23 +283,22 @@ export class SongService { private usedTopAnimes=new Set<string>();
     return forkJoin(requests).pipe(
       timeout(15000),
       map((results: AnimeSong[][]) => {
-        // Flatten the array of arrays
         return results.reduce((acc, val) => acc.concat(val), []);
       }),
       tap((loadedSongs: AnimeSong[]) => {
-        console.log(`Loaded ${loadedSongs.length} Top anime opening songs.`);
+        console.log(`Loaded ${loadedSongs.length} ${listName} opening songs.`);
         const uniqueSet = new Set(); this.songs = loadedSongs.filter(s => { if(uniqueSet.has(s.url)){ return false; } uniqueSet.add(s.url); return true; });
         this.unplayedSongs = [...this.songs];
         if (this.songs.length === 0) {
-          this.errorMessage = 'No songs found for the selected Top Anime. Please retry.';
+          this.errorMessage = `No songs found for the selected ${listName}. Please retry.`;
         }
         this.isReady = true;
         this.isLoading = false;
       }),
       map(loadedSongs => loadedSongs.length > 0),
       catchError(error => {
-        console.error('Error loading top anime themes', error);
-        this.errorMessage = error.message || 'Failed to load Top Anime songs.';
+        console.error(`Error loading ${listName} themes`, error);
+        this.errorMessage = error.message || `Failed to load ${listName} songs.`;
         this.isLoading = false;
         return of(false);
       })
@@ -302,14 +330,26 @@ export class SongService { private usedTopAnimes=new Set<string>();
     return Array.from(new Set(this.songs.map(s => s.name))).sort();
   }
 
-  // Cerca un anime online tramite AnimeThemes API
-  searchAnime(term: string): Observable<string[]> {
+  getLocalAnimeData(): {name: string, synonyms: string[], imageUrl: string}[] {
+    const list = this.songs.map(s => ({name: s.name, synonyms: s.synonyms || [], imageUrl: s.imageUrl || ''}));
+    const unique = new Map();
+    list.forEach(i => unique.set(i.name, i));
+    return Array.from(unique.values()).sort((a,b) => a.name.localeCompare(b.name));
+  }
+
+  // Cerca un anime online tramite Jikan API per sfruttare il potentissimo motore di ricerca per sinonimi
+  searchAnime(term: string): Observable<{title: string, imageUrl: string}[]> {
     if (!term.trim()) return of([]);
-    const url = `https://api.animethemes.moe/anime?q=${encodeURIComponent(term)}&page[size]=15`;
+    // Jikan API (MyAnimeList) è molto più potente per matchare sinonimi come "Danmachi", e il "title" primario combacia sempre col romaji di AnimeThemes!
+    const url = `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(term)}&limit=15`;
     return this.http.get<any>(url).pipe(
       map(res => {
-        if (res && res.anime) {
-          return res.anime.map((a: any) => a.name) as string[];
+        if (res && res.data) {
+          // L'API di Jikan restituisce il "title" (il nome romaji ufficiale usato da AnimeThemes) e l'immagine
+          return res.data.map((a: any) => ({
+            title: a.title,
+            imageUrl: a.images?.webp?.image_url || a.images?.jpg?.image_url || ''
+          })) as {title: string, imageUrl: string}[];
         }
         return [];
       }),
