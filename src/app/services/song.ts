@@ -337,23 +337,44 @@ export class SongService { private usedTopAnimes=new Set<string>();
     return Array.from(unique.values()).sort((a,b) => a.name.localeCompare(b.name));
   }
 
-  // Cerca un anime online tramite Jikan API per sfruttare il potentissimo motore di ricerca per sinonimi
+  // Cerca anime online usando l'API GraphQL di AniList (più veloce ed affidabile di Jikan)
   searchAnime(term: string): Observable<{title: string, imageUrl: string}[]> {
     if (!term.trim()) return of([]);
-    // Jikan API (MyAnimeList) è molto più potente per matchare sinonimi come "Danmachi", e il "title" primario combacia sempre col romaji di AnimeThemes!
-    const url = `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(term)}&limit=15`;
-    return this.http.get<any>(url).pipe(
+    
+    const query = `
+      query ($search: String) {
+        Page(page: 1, perPage: 15) {
+          media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
+            title {
+              romaji
+              english
+            }
+            coverImage {
+              medium
+            }
+          }
+        }
+      }
+    `;
+
+    return this.http.post<any>('https://graphql.anilist.co', {
+      query: query,
+      variables: { search: term }
+    }).pipe(
       map(res => {
-        if (res && res.data) {
-          // L'API di Jikan restituisce il "title" (il nome romaji ufficiale usato da AnimeThemes) e l'immagine
-          return res.data.map((a: any) => ({
-            title: a.title,
-            imageUrl: a.images?.webp?.image_url || a.images?.jpg?.image_url || ''
+        if (res && res.data && res.data.Page && res.data.Page.media) {
+          return res.data.Page.media.map((a: any) => ({
+            // AnimeThemes di solito usa i nomi romaji come titolo principale
+            title: a.title?.romaji || a.title?.english || 'Unknown',
+            imageUrl: a.coverImage?.medium || ''
           })) as {title: string, imageUrl: string}[];
         }
         return [];
       }),
-      catchError(() => of([]))
+      catchError(error => {
+        console.error('Error during AniList search:', error);
+        return of([]);
+      })
     );
   }
 }
