@@ -1,7 +1,129 @@
 ﻿<div class="min-h-screen bg-[#191919] text-white flex flex-col items-center py-6 font-sans">
   <!-- Header -->
   <div class="w-full flex justify-center relative items-center px-6 mb-6 max-w-4xl">   
-    <h1 class="text-4xl font-extrabold tracking-tighter">Songless Anime</h1>
+    
+    <!-- Settings Button (Left) -->
+    <div class="absolute left-6 z-[40]" *ngIf="gameStatus !== 'setup'">
+      <button (click)="toggleMenu()" class="w-10 h-10 rounded-full border border-gray-600 flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-400 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Settings Modal -->
+    <div *ngIf="isMenuOpen" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+      <div class="bg-[#1e1e1e] border border-[#333] rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in text-left">
+        <!-- Modal Header -->
+        <div class="flex justify-between items-center p-6 border-b border-[#333]">
+          <h2 class="text-lg font-bold text-white flex items-center gap-3 tracking-wide">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+            GAME CONFIGURATION
+          </h2>
+          <button (click)="toggleMenu()" class="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-all duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="p-6 md:p-8 space-y-10 overflow-y-auto max-h-[75vh]">
+          
+          <!-- Game Mode -->
+          <div>
+            <h3 class="text-xs uppercase font-bold text-gray-500 tracking-[0.15em] mb-4">Select Game Mode</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button (click)="setMode('anilist')"
+                      [ngClass]="mode === 'anilist' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
+                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
+                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="mode === 'anilist'">AniList</span>
+                <span class="text-sm opacity-70 leading-snug font-medium">Use your AniList completed shows.</span>
+              </button>
+              
+              <button (click)="setMode('random')"
+                      [ngClass]="mode === 'random' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
+                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
+                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="mode === 'random'">Random</span>
+                <span class="text-sm opacity-70 leading-snug font-medium">Completely random anime songs.</span>
+              </button>
+              
+              <button (click)="setMode('top')"
+                      [ngClass]="mode === 'top' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
+                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
+                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="mode === 'top'">Top Anime</span>
+                <span class="text-sm opacity-70 leading-snug font-medium">Top rated and popular anime opening.</span>
+              </button>
+
+              <button (click)="setMode('seasonal')"
+                      [ngClass]="mode === 'seasonal' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
+                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
+                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="mode === 'seasonal'">Seasonal</span>
+                <span class="text-sm opacity-70 leading-snug font-medium">Anime from current or recent seasons.</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Game Style -->
+          <div>
+            <h3 class="text-xs uppercase font-bold text-gray-500 tracking-[0.15em] mb-4">Select Game Style</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button (click)="setGameStyle('classic')"
+                      [ngClass]="gameStyle === 'classic' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
+                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
+                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="gameStyle === 'classic'">Classic</span>
+                <span class="text-sm opacity-70 leading-snug font-medium">Type the name. Fails increase listen time.</span>
+              </button>
+
+              <button (click)="setGameStyle('multiple-choice')"
+                      [ngClass]="gameStyle === 'multiple-choice' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
+                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
+                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="gameStyle === 'multiple-choice'">Multiple Choice</span>
+                <span class="text-sm opacity-70 leading-snug font-medium">Listen for 15s, pick 1 of 4 options.</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- AniList Username Input (Modal) -->
+          <div *ngIf="mode === 'anilist'" class="p-6 bg-[#161616] rounded-2xl border border-[#333]">
+            <label class="block text-xs uppercase tracking-[0.1em] font-bold text-gray-500 mb-3">AniList Username</label>
+            <input type="text"
+                   [(ngModel)]="anilistUsername"
+                   (keyup.enter)="applySettings()"
+                   placeholder="Enter your Anilist username..."
+                   class="w-full bg-[#0a0a0a] text-white border border-[#444] focus:border-white focus:ring-1 focus:ring-white focus:outline-none rounded-xl px-5 py-4 font-medium transition-all duration-300 placeholder:text-gray-600">
+          </div>
+
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="p-5 border-t border-[#333] flex justify-end bg-[#141414]">
+          <button (click)="applySettings()" 
+                  [disabled]="mode === 'anilist' && !anilistUsername.trim()"
+                  [ngClass]="(mode === 'anilist' && !anilistUsername.trim()) ? 'opacity-50 cursor-not-allowed scale-100' : 'bg-white hover:bg-gray-200 hover:scale-[1.02]'"
+                  class="px-8 py-3 text-black font-extrabold text-sm tracking-wider uppercase rounded-xl transition-all duration-300">
+            Apply & Restart
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col items-center">
+      <h1 class="text-4xl font-extrabold tracking-tighter">Songless Anime</h1>
+      <div *ngIf="gameStatus === 'playing' || gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'finished'" 
+           class="mt-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] tracking-[0.2em] font-bold text-gray-400 uppercase flex gap-2">
+        <span class="text-white">{{mode}}</span>
+        <span>•</span>
+        <span class="text-white">{{gameStyle}}</span>
+        <ng-container *ngIf="mode === 'anilist'">
+          <span>•</span>
+          <span class="text-[#02A9FF]">{{activeAnilistUsername}}</span>
+        </ng-container>
+      </div>
+    </div>
     
     <!-- Volume as the right icon -->
     <div class="group absolute right-6 flex justify-end">
@@ -18,50 +140,91 @@
     </div>
   </div>
 
-  <!-- Mode Selector -->
-  <div class="w-full max-w-lg px-4 mb-4 text-center flex justify-center mx-auto">
-    <div class="flex bg-[#222] rounded-lg p-1 w-full text-sm font-semibold border border-[#333] shadow-md">
-      <button (click)="setMode('anilist')"
-              [ngClass]="{'bg-[#02A9FF] text-white shadow-sm': mode === 'anilist', 'text-gray-400 hover:text-white': mode !== 'anilist'}" 
-              class="flex-1 py-2 rounded-md transition-colors">
-        AniList
-      </button>
-      <button (click)="setMode('random')"
-              [ngClass]="{'bg-[#4caf50] text-white shadow-sm': mode === 'random', 'text-gray-400 hover:text-white': mode !== 'random'}" 
-              class="flex-1 py-2 rounded-md transition-colors mx-1">
-        Random
-      </button>
-      <button (click)="setMode('top')"
-              [ngClass]="{'bg-[#4caf50] text-white shadow-sm': mode === 'top', 'text-gray-400 hover:text-white': mode !== 'top'}" 
-              class="flex-1 py-2 rounded-md transition-colors mx-1">
-        Top Anime
-      </button>
-      <button (click)="setMode('seasonal')"
-              [ngClass]="{'bg-[#4caf50] text-white shadow-sm': mode === 'seasonal', 'text-gray-400 hover:text-white': mode !== 'seasonal'}" 
-              class="flex-1 py-2 rounded-md transition-colors">
-        Seasonal
-      </button>
-    </div>
-  </div>
-
   <div class="w-full max-w-2xl flex-1 flex flex-col px-4">
-    <!-- AniList Username Input -->
-    <div *ngIf="mode === 'anilist' && gameStatus === 'loading' && !isAnilistLoading" class="flex flex-col items-center justify-center py-6 w-full max-w-md mx-auto text-center">
-      <h2 class="text-2xl font-bold mb-2">AniList integration</h2>
-      <p class="text-gray-400 text-sm mb-6">Enter your username to play with your Completed list.</p>
-      
-      <div class="flex w-full flex-col sm:flex-row gap-2">
-        <input type="text"
-               [(ngModel)]="anilistUsername"
-               (keyup.enter)="startAnilistGame()"
-               placeholder="Username..."
-               class="flex-1 bg-[#222] text-white border border-[#333] focus:border-[#02A9FF] focus:outline-none rounded px-4 py-3 font-medium transition-colors">
-        
-        <button (click)="startAnilistGame()"
-                [disabled]="!anilistUsername.trim()"
-                class="bg-[#02A9FF] hover:bg-[#0288CC] disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-3 rounded font-bold uppercase transition-colors sm:w-auto w-full">
-          Play
-        </button>
+    <!-- Setup State (Initial Selection) -->
+    <div *ngIf="gameStatus === 'setup'" class="flex-1 flex flex-col items-center justify-center py-6 w-full max-w-2xl mx-auto">
+      <div class="bg-[#1e1e1e] border border-[#333] rounded-2xl w-full shadow-2xl overflow-hidden flex flex-col text-left animate-fade-in">
+        <div class="p-6 md:p-8 space-y-8">
+          
+          <div class="text-center mb-4">
+            <h2 class="text-3xl font-extrabold text-white mb-3 tracking-wide drop-shadow-md">SONGLESS ANIME</h2>
+            <p class="text-gray-400 text-sm tracking-[0.1em] uppercase">Configure your game to get started</p>
+          </div>
+
+          <!-- Game Mode -->
+          <div>
+            <h3 class="text-xs uppercase font-bold text-gray-500 tracking-[0.15em] mb-4">Select Game Mode</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button (click)="setMode('anilist')"
+                      [ngClass]="mode === 'anilist' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
+                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
+                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="mode === 'anilist'">AniList</span>
+                <span class="text-sm opacity-70 leading-snug font-medium">Use your AniList completed shows.</span>
+              </button>
+              
+              <button (click)="setMode('random')"
+                      [ngClass]="mode === 'random' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
+                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
+                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="mode === 'random'">Random</span>
+                <span class="text-sm opacity-70 leading-snug font-medium">Completely random anime songs.</span>
+              </button>
+              
+              <button (click)="setMode('top')"
+                      [ngClass]="mode === 'top' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
+                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
+                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="mode === 'top'">Top Anime</span>
+                <span class="text-sm opacity-70 leading-snug font-medium">Top rated and popular anime opening.</span>
+              </button>
+
+              <button (click)="setMode('seasonal')"
+                      [ngClass]="mode === 'seasonal' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
+                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
+                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="mode === 'seasonal'">Seasonal</span>
+                <span class="text-sm opacity-70 leading-snug font-medium">Anime from current or recent seasons.</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Game Style -->
+          <div>
+            <h3 class="text-xs uppercase font-bold text-gray-500 tracking-[0.15em] mb-4">Select Game Style</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button (click)="setGameStyle('classic')"
+                      [ngClass]="gameStyle === 'classic' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
+                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
+                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="gameStyle === 'classic'">Classic</span>
+                <span class="text-sm opacity-70 leading-snug font-medium">Type the name. Fails increase listen time.</span>
+              </button>
+
+              <button (click)="setGameStyle('multiple-choice')"
+                      [ngClass]="gameStyle === 'multiple-choice' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
+                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
+                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="gameStyle === 'multiple-choice'">Multiple Choice</span>
+                <span class="text-sm opacity-70 leading-snug font-medium">Listen for 15s, pick 1 of 4 options.</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- AniList Username Input -->
+          <div *ngIf="mode === 'anilist'" class="p-6 bg-[#161616] rounded-2xl border border-[#333]">
+            <label class="block text-xs uppercase tracking-[0.1em] font-bold text-gray-500 mb-3">AniList Username</label>
+            <input type="text"
+                   [(ngModel)]="anilistUsername"
+                   (keyup.enter)="startGameFromSetup()"
+                   placeholder="Enter your Anilist username..."
+                   class="w-full bg-[#0a0a0a] text-white border border-[#444] focus:border-white focus:ring-1 focus:ring-white focus:outline-none rounded-xl px-5 py-4 font-medium transition-all duration-300 placeholder:text-gray-600">
+          </div>
+
+        </div>
+
+        <div class="p-6 border-t border-[#333] bg-[#141414] flex justify-center">
+          <button (click)="startGameFromSetup()" 
+                  [disabled]="mode === 'anilist' && !anilistUsername.trim()"
+                  [ngClass]="(mode === 'anilist' && !anilistUsername.trim()) ? 'opacity-50 cursor-not-allowed scale-100' : 'hover:scale-[1.02] shadow-[0_0_20px_rgba(255,255,255,0.15)]'"
+                  class="w-full py-4 bg-white text-black text-sm tracking-[0.15em] font-extrabold rounded-xl transition-all duration-300 uppercase">
+            Start Game
+          </button>
+        </div>
       </div>
     </div>
 
@@ -93,7 +256,7 @@
       </div>
 
       <!-- Guess List -->
-      <div class="w-full flex flex-col items-center justify-start space-y-3 mb-10">
+      <div *ngIf="gameStyle === 'classic'" class="w-full flex flex-col items-center justify-start space-y-3 mb-10">
         <div *ngFor="let item of [].constructor(maxLevels); let i = index" 
              class="h-10 w-full max-w-xl rounded flex items-center justify-center font-semibold text-[13px] tracking-wide transition-colors px-4 truncate"
              [ngClass]="{
@@ -111,13 +274,15 @@
       <!-- Progress Line -->
       <div class="w-full mb-12 relative px-4">
         <!-- Floating time indicator (caret) -->
-        <div class="w-full relative h-0">
-          <div class="absolute -top-[30px] whitespace-nowrap text-[15px] font-bold text-white flex flex-col items-center transform -translate-x-1/2 transition-all duration-300 z-30"
-               [style.left.%]="(getPlayDuration() / 15.0) * 100">
-            <span>{{ getPlayDuration() }} seconds</span>
-            <div class="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-t-white border-l-transparent border-r-transparent mt-[1px]"></div>
+        <ng-container *ngIf="gameStyle === 'classic'">
+          <div class="w-full relative h-0">
+            <div class="absolute -top-[30px] whitespace-nowrap text-[15px] font-bold text-white flex flex-col items-center transform -translate-x-1/2 transition-all duration-300 z-30"
+                 [style.left.%]="(getPlayDuration() / 15.0) * 100">
+              <span>{{ getPlayDuration() }} seconds</span>
+              <div class="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-t-white border-l-transparent border-r-transparent mt-[1px]"></div>
+            </div>
           </div>
-        </div>
+        </ng-container>
 
         <!-- Duration segmented bar -->
         <div class="w-full h-[14px] bg-[#2a2a2a] rounded-sm flex select-none relative overflow-hidden">
@@ -125,11 +290,13 @@
                [style.width.%]="(currentTime / 15.0) * 100">
           </div>
           
-          <div class="h-full border-r border-[#191919] z-20" style="width: 0.66%"></div>
-          <div class="h-full border-r border-[#191919] z-20" style="width: 2.66%"></div>
-          <div class="h-full border-r border-[#191919] z-20" style="width: 10%"></div>
-          <div class="h-full border-r border-[#191919] z-20" style="width: 13.33%"></div>
-          <div class="h-full border-r border-[#191919] z-20" style="width: 26.66%"></div>
+          <ng-container *ngIf="gameStyle === 'classic'">
+            <div class="h-full border-r border-[#191919] z-20" style="width: 0.66%"></div>
+            <div class="h-full border-r border-[#191919] z-20" style="width: 2.66%"></div>
+            <div class="h-full border-r border-[#191919] z-20" style="width: 10%"></div>
+            <div class="h-full border-r border-[#191919] z-20" style="width: 13.33%"></div>
+            <div class="h-full border-r border-[#191919] z-20" style="width: 26.66%"></div>
+          </ng-container>
           
           <div class="absolute top-0 left-0 h-full bg-[#444] z-0 transition-all duration-300"
                [style.width.%]="(getPlayDuration() / 15.0) * 100">
@@ -161,45 +328,73 @@
         </button>
       </div>
 
-      <!-- Search Area -->
-      <div class="w-full flex items-center justify-center gap-2 mb-4">
-         <div class="relative w-full max-w-lg">
-            <div class="flex items-center bg-[#222222] border-[1.5px] border-transparent focus-within:border-[#333] rounded px-4 py-3 h-[52px] transition-colors relative"
-                 [ngClass]="{'border-red-500': showWrongFeedback, 'border-yellow-500': showCloseFeedback}">
-              <svg class="h-5 w-5 text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input type="text"
-                     [(ngModel)]="guess"
-                     (ngModelChange)="onSearchChange()"
-                     (focus)="onSearchChange()"
-                     class="flex-1 bg-transparent text-white focus:outline-none placeholder-gray-500 font-medium text-[15px]"
-                     placeholder="Search an anime...">
+      <!-- Classic Input Area -->
+      <ng-container *ngIf="gameStyle === 'classic'">
+        <!-- Search Area -->
+        <div class="w-full flex items-center justify-center gap-2 mb-4">
+           <div class="relative w-full max-w-lg">
+              <div class="flex items-center bg-[#222222] border-[1.5px] border-transparent focus-within:border-[#333] rounded px-4 py-3 h-[52px] transition-colors relative"
+                   [ngClass]="{'border-red-500': showWrongFeedback, 'border-yellow-500': showCloseFeedback}">
+                <svg class="h-5 w-5 text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input type="text"
+                       [(ngModel)]="guess"
+                       (ngModelChange)="onSearchChange()"
+                       (focus)="onSearchChange()"
+                       class="flex-1 bg-transparent text-white focus:outline-none placeholder-gray-500 font-medium text-[15px]"
+                       placeholder="Search an anime...">
+              </div>
+              
+              <ul *ngIf="filteredNames.length > 0" 
+                  class="absolute bottom-full mb-2 w-full bg-[#222] border border-[#333] shadow-2xl max-h-96 overflow-y-auto z-50 text-left rounded-md">
+                <li *ngFor="let result of filteredNames" 
+                    (click)="selectGuess(result.title)"
+                    class="px-4 py-3 hover:bg-[#333] cursor-pointer text-base font-medium border-b border-[#333] last:border-b-0 text-white flex items-center gap-4">
+                  <img *ngIf="result.imageUrl" [src]="result.imageUrl" class="w-14 h-20 object-cover rounded flex-shrink-0 shadow-md">
+                  <div *ngIf="!result.imageUrl" class="w-14 h-20 rounded bg-gray-700 flex-shrink-0 shadow-md"></div>
+                  <span class="truncate drop-shadow-md">{{ result.title }}</span>
+                </li>
+              </ul>
+           </div>
+        </div>
+        <div class="flex justify-center gap-3 w-full max-w-lg mx-auto">
+          <button (click)="skip()" class="px-6 h-[46px] w-[130px] bg-[#333] hover:bg-[#444] text-white font-semibold rounded text-sm transition-colors whitespace-nowrap">
+            {{ level === maxLevels ? 'Give up' : 'Skip' }}
+          </button>
+          <button (click)="submitGuess()" 
+                  [disabled]="!hasSelectedGuess"
+                  class="px-6 h-[46px] w-[130px] font-semibold rounded text-sm transition-colors whitespace-nowrap"
+                  [ngClass]="hasSelectedGuess ? 'bg-[#4caf50] hover:bg-[#439e47] text-white' : 'bg-gray-600 text-gray-400 cursor-not-allowed'">
+            Submit
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- Multiple Choice Area -->
+      <ng-container *ngIf="gameStyle === 'multiple-choice'">
+        <div class="w-full flex flex-col gap-3 max-w-lg mx-auto md:grid md:grid-cols-2" [ngClass]="{'animate-pulse border-red-500': showWrongFeedback}">
+          <button *ngFor="let opt of multipleChoiceOptions" 
+                  (click)="submitMultipleChoice(opt)"
+                  class="relative w-full bg-[#303030] hover:bg-[#4caf50] text-center text-white py-2 px-3 rounded-lg text-sm sm:text-base font-medium shadow-md transition-colors border border-[#444] hover:shadow-lg overflow-hidden group flex items-center min-h-[80px]">
+            <!-- Sfondo oscurato passivo dell'immagine -->
+            <div *ngIf="opt.imageUrl" class="absolute inset-0 z-0 opacity-20 group-hover:opacity-50 transition-opacity duration-300">
+              <img [src]="opt.imageUrl" class="w-full h-full object-cover blur-[2px] group-hover:blur-0 transition-all duration-300" />
             </div>
             
-            <ul *ngIf="filteredNames.length > 0" 
-                class="absolute bottom-full mb-2 w-full bg-[#222] border border-[#333] shadow-2xl max-h-96 overflow-y-auto z-50 text-left rounded-md">
-              <li *ngFor="let result of filteredNames" 
-                  (click)="selectGuess(result.title)"
-                  class="px-4 py-3 hover:bg-[#333] cursor-pointer text-base font-medium border-b border-[#333] last:border-b-0 text-white flex items-center gap-4">
-                <img *ngIf="result.imageUrl" [src]="result.imageUrl" class="w-14 h-20 object-cover rounded flex-shrink-0 shadow-md">
-                <div *ngIf="!result.imageUrl" class="w-14 h-20 rounded bg-gray-700 flex-shrink-0 shadow-md"></div>
-                <span class="truncate drop-shadow-md">{{ result.title }}</span>
-              </li>
-            </ul>
-         </div>
-      </div>
-      <div class="flex justify-center gap-3 w-full max-w-lg mx-auto">
-        <button (click)="skip()" class="px-6 h-[46px] w-[130px] bg-[#333] hover:bg-[#444] text-white font-semibold rounded text-sm transition-colors whitespace-nowrap">
-          {{ level === maxLevels ? 'Give up' : 'Skip' }}
-        </button>
-        <button (click)="submitGuess()" 
-                [disabled]="!hasSelectedGuess"
-                class="px-6 h-[46px] w-[130px] font-semibold rounded text-sm transition-colors whitespace-nowrap"
-                [ngClass]="hasSelectedGuess ? 'bg-[#4caf50] hover:bg-[#439e47] text-white' : 'bg-gray-600 text-gray-400 cursor-not-allowed'">
-          Submit
-        </button>
-      </div>
+            <!-- Sfumatura solida sopra l'immagine -->
+            <div *ngIf="opt.imageUrl" class="absolute inset-0 z-0 bg-gradient-to-r from-[#222] via-[#222]/90 to-transparent"></div>
+            
+            <div class="relative z-10 flex items-center gap-3 text-left w-full">
+              <!-- Mini locandina visibile laterale -->
+              <img *ngIf="opt.imageUrl" [src]="opt.imageUrl" class="w-12 h-16 object-cover rounded shadow-md flex-shrink-0" />
+              <div *ngIf="!opt.imageUrl" class="w-12 h-16 bg-gray-600 rounded shadow-md flex-shrink-0 flex items-center justify-center text-xs font-bold text-gray-400">NO IMG</div>
+              
+              <span class="truncate pr-2 drop-shadow-md font-bold">{{ opt.name }}</span>
+            </div>
+          </button>
+        </div>
+      </ng-container>
     </div>
 
     <!-- Win / Lose State -->

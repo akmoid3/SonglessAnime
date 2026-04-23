@@ -5,6 +5,8 @@ import { SongService, AnimeSong } from '../../services/song';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
+import { TOP_ANIME } from '../../services/top_anime';
+
 @Component({
   selector: 'app-game',
   standalone: true,
@@ -14,10 +16,13 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 })
 export class Game implements OnInit, OnDestroy {
   mode: 'random' | 'top' | 'seasonal' | 'anilist' = 'anilist';
+  gameStyle: 'classic' | 'multiple-choice' = 'classic';
   anilistUsername: string = '';
+  activeAnilistUsername: string = '';
   isAnilistLoading: boolean = false;
   
   currentSong: AnimeSong | null = null;
+  multipleChoiceOptions: {name: string, imageUrl: string, isCorrect: boolean}[] = [];
   localAnimeData: {name: string, synonyms: string[], imageUrl: string}[] = [];
   guesses: string[] = [];
   
@@ -26,11 +31,12 @@ export class Game implements OnInit, OnDestroy {
   guess: string = '';
   filteredNames: {title: string, imageUrl: string}[] = [];
   hasSelectedGuess: boolean = false;
+  isMenuOpen: boolean = false;
   
   private searchSubject = new Subject<string>();
   private searchSubscription!: Subscription;
 
-  gameStatus: 'loading' | 'playing' | 'won' | 'lost' | 'error' | 'finished' = 'loading';
+  gameStatus: 'setup' | 'loading' | 'playing' | 'won' | 'lost' | 'error' | 'finished' = 'setup';
   errorMessage: string = '';
 
   currentRound: number = 1;
@@ -51,8 +57,8 @@ export class Game implements OnInit, OnDestroy {
   constructor(public songService: SongService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
-    this.gameStatus = 'loading';
-    console.log('ngOnInit: starting initialization');
+    this.gameStatus = 'setup';
+    console.log('ngOnInit: waiting for user setup');
     
     // Inizializza il motore di ricerca online con RxJS
     this.searchSubscription = this.searchSubject.pipe(
@@ -97,40 +103,61 @@ export class Game implements OnInit, OnDestroy {
       
       this.cdr.detectChanges();
     });
+  }
+
+  startGameFromSetup(): void {
+    if (this.mode === 'anilist' && !this.anilistUsername.trim()) {
+      return;
+    }
     
-    this.loadSongsForGame(this.mode);
+    this.activeAnilistUsername = this.anilistUsername.trim();
+    if (this.mode === 'anilist') {
+      this.isAnilistLoading = true;
+    }
+    this.restartGame();
   }
 
   setMode(newMode: 'random' | 'top' | 'seasonal' | 'anilist'): void {
-    if (this.mode === newMode && newMode !== 'anilist') return;
     this.mode = newMode;
-
     if (newMode === 'anilist') {
       this.isAnilistLoading = false;
     }
+  }
+
+  setGameStyle(newStyle: 'classic' | 'multiple-choice'): void {
+    this.gameStyle = newStyle;
+  }
+
+  toggleMenu(): void {
+    this.isMenuOpen = !this.isMenuOpen;
+  }
+
+  applySettings(): void {
+    if (this.mode === 'anilist' && !this.anilistUsername.trim()) return;
     
-    // Se è AniList, non facciamo ripartire subito, aspettiamo che l'utente inserisca l'username e prema Play.
-    if (newMode !== 'anilist') {
-      this.restartGame();
-    } else {
-      // Ferma eventuali giocate correnti se passa ad AniList
-      this.stopAudio();
-      this.gameStatus = 'loading'; // O mettiamo uno stato apposito, per ora mostriamo il form nel template
-      this.cdr.detectChanges();
-    }
+    this.activeAnilistUsername = this.anilistUsername.trim();
+    this.isMenuOpen = false;
+    this.restartGame();
   }
 
   startAnilistGame(): void {
     if (!this.anilistUsername.trim()) return;
+    this.activeAnilistUsername = this.anilistUsername.trim();
     this.isAnilistLoading = true;
     this.restartGame();
   }
 
   restartGame(): void {
     this.stopAudio();
-    this.gameStatus = 'loading';
     this.currentRound = 1;
     this.score = 0;
+    
+    if (this.mode === 'anilist' && !this.anilistUsername.trim()) {
+      this.gameStatus = 'setup';
+      return;
+    }
+    
+    this.gameStatus = 'loading';
     this.cdr.detectChanges();
     this.loadSongsForGame(this.mode);
   }
@@ -211,6 +238,10 @@ export class Game implements OnInit, OnDestroy {
     this.gameStatus = 'playing';
     
     if (this.currentSong) {
+      if (this.gameStyle === 'multiple-choice') {
+        this.generateMultipleChoiceOptions();
+      }
+
       this.audio = new Audio(this.currentSong.url);
       this.audio.volume = this.volume;
       // Preload data
@@ -259,6 +290,9 @@ export class Game implements OnInit, OnDestroy {
   }
 
   getPlayDuration(): number {
+    if (this.gameStyle === 'multiple-choice') {
+      return 15.0;
+    }
     const durations = [0.1, 0.5, 2.0, 4.0, 8.0, 15.0];
     return durations[this.level - 1] || 15.0;
   }
@@ -379,6 +413,64 @@ export class Game implements OnInit, OnDestroy {
       this.guesses.push(this.guess);
       this.triggerWrongFeedback();
       this.wrongGuessOrSkip();
+    }
+  }
+
+  generateMultipleChoiceOptions(): void {
+    if (!this.currentSong) return;
+    
+    const correctName = this.currentSong.name;
+    const correctImage = this.currentSong.imageUrl || '';
+    const options = [{ name: correctName, imageUrl: correctImage, isCorrect: true }];
+    
+    // Mappa per avere name -> imageUrl
+    const availableOptions = new Map<string, string>();
+    
+    if (this.mode === 'anilist' && this.songService.userAnilist && this.songService.userAnilist.length > 0) {
+      // In modalità AniList usa solo le serie che l'utente ha effettivamente completato, memorizzando la loro immagine originale
+      this.songService.userAnilist.forEach(a => availableOptions.set(a.title, a.imageUrl));
+    } else if (this.mode === 'seasonal') {
+      // Per la modalità stagionale, usa altri anime stagionali precaricati in background
+      this.localAnimeData.forEach(a => availableOptions.set(a.name, a.imageUrl));
+      this.songService.seasonalWrongAnswersPool.forEach(a => availableOptions.set(a.title, a.imageUrl));
+    } else {
+      // Per tutte le altre modalità usa gli anime che sono già nel mazzo della partita (che hanno le immagini)
+      this.localAnimeData.forEach(a => availableOptions.set(a.name, a.imageUrl));
+      // E inoltre misceliamo dinamicamente il set di esche globali con la cover scaricata!
+      this.songService.wrongAnswersPool.forEach(a => availableOptions.set(a.title, a.imageUrl));
+    }
+    
+    availableOptions.delete(correctName);
+    
+    // Se, incredibilmente, il pool non arriva a 3 alternative (4 in totale col corretto), aggiungiamo dei top anime (senza immagini)
+    if (availableOptions.size < 3) {
+      TOP_ANIME.forEach(a => { if (!availableOptions.has(a) && a !== correctName) availableOptions.set(a, ''); });
+    }
+    
+    // Convertiamo e assicuriamoci che le esche non abbiano stringhe vuote
+    const availableArray = Array.from(availableOptions.entries()).map(([name, imageUrl]) => ({ name, imageUrl }));
+    
+    while (options.length < 4 && availableArray.length > 0) {
+      const idx = Math.floor(Math.random() * availableArray.length);
+      options.push({ name: availableArray[idx].name, imageUrl: availableArray[idx].imageUrl, isCorrect: false });
+      availableArray.splice(idx, 1);
+    }
+    
+    this.multipleChoiceOptions = options.sort(() => Math.random() - 0.5);
+  }
+
+  submitMultipleChoice(option: {name: string, imageUrl?: string, isCorrect: boolean}): void {
+    if (this.gameStatus !== 'playing') return;
+    this.stopAudio();
+    this.guess = option.name;
+    this.guesses.push(this.guess);
+    
+    if (option.isCorrect) {
+      this.score++;
+      this.gameStatus = 'won';
+    } else {
+      this.triggerWrongFeedback(); // opzionalmente possiamo mostrare un feedback
+      this.gameStatus = 'lost';
     }
   }
 

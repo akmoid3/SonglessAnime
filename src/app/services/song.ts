@@ -24,12 +24,80 @@ export class SongService { private usedTopAnimes=new Set<string>();
   private isReady = false;
   
   public errorMessage: string = '';
+  public userAnilist: {title: string, imageUrl: string}[] = [];
+  public wrongAnswersPool: {title: string, imageUrl: string}[] = [];
+  public seasonalWrongAnswersPool: {title: string, imageUrl: string}[] = [];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    this.ensureWrongAnswersPool('random');
+  }
+
+  public ensureWrongAnswersPool(mode: string) {
+    if (mode === 'seasonal') {
+       if (this.seasonalWrongAnswersPool.length > 30) return;
+    } else {
+       if (this.wrongAnswersPool.length > 150) return;
+    }
+    
+    let query = ``;
+    
+    if (mode === 'seasonal') {
+       const year = new Date().getFullYear();
+       query = `
+         query {
+           Page(page: 1, perPage: 50) {
+             media(type: ANIME, seasonYear: ${year}, sort: POPULARITY_DESC, isAdult: false) {
+               title { romaji }
+               coverImage { large medium }
+             }
+           }
+         }
+       `;
+    } else {
+       const page = Math.floor(Math.random() * 20) + 1;
+       query = `
+         query {
+           Page(page: ${page}, perPage: 50) {
+             media(type: ANIME, sort: POPULARITY_DESC, isAdult: false) {
+               title { romaji }
+               coverImage { large medium }
+             }
+           }
+         }
+       `;
+    }
+
+    this.http.post<any>('https://graphql.anilist.co', { query }).subscribe({
+      next: (res) => {
+        if (res?.data?.Page?.media) {
+           const fetched = res.data.Page.media.map((m: any) => ({
+             title: m.title?.romaji || 'Unknown',
+             imageUrl: m.coverImage?.large || m.coverImage?.medium || ''
+           })).filter((m: any) => m.imageUrl);
+           
+           if (mode === 'seasonal') {
+               const poolMap = new Map<string, string>();
+               this.seasonalWrongAnswersPool.forEach(a => poolMap.set(a.title, a.imageUrl));
+               fetched.forEach((a: any) => poolMap.set(a.title, a.imageUrl));
+               this.seasonalWrongAnswersPool = Array.from(poolMap.entries()).map(([title, imageUrl]) => ({title, imageUrl})).sort(() => 0.5 - Math.random());
+           } else {
+               const poolMap = new Map<string, string>();
+               this.wrongAnswersPool.forEach(a => poolMap.set(a.title, a.imageUrl));
+               fetched.forEach((a: any) => poolMap.set(a.title, a.imageUrl));
+               this.wrongAnswersPool = Array.from(poolMap.entries()).map(([title, imageUrl]) => ({title, imageUrl})).sort(() => 0.5 - Math.random());
+           }
+        }
+      },
+      error: (err) => console.error("Error preloading wrong answers pool", err)
+    });
+  }
 
   loadSongs(amount: number = 20, mode: 'random' | 'top' | 'seasonal' | 'anilist' = 'random', anilistUsername?: string): Observable<boolean> {
     this.isLoading = true;
     this.errorMessage = '';
+    
+    // Ricarichiamo il pool in background in modo da avere sempre nuove esche per i quiz
+    this.ensureWrongAnswersPool(mode);
 
     if (mode === 'top') {
       return this.loadTopAnime();
@@ -157,6 +225,10 @@ export class SongService { private usedTopAnimes=new Set<string>();
                 title {
                   romaji
                 }
+                coverImage {
+                  medium
+                  large
+                }
               }
             }
           }
@@ -181,14 +253,17 @@ export class SongService { private usedTopAnimes=new Set<string>();
            return of(false);
         }
         
-        let userAnimeTitles: string[] = [];
+        let userAnimeTitles: {title: string, imageUrl: string}[] = [];
         const lists = response.data.MediaListCollection.lists;
         if (lists && lists.length > 0) {
           lists.forEach((list: any) => {
             if (list.entries) {
               list.entries.forEach((entry: any) => {
                 if (entry.media?.title?.romaji) {
-                  userAnimeTitles.push(entry.media.title.romaji);
+                  userAnimeTitles.push({
+                    title: entry.media.title.romaji,
+                    imageUrl: entry.media.coverImage?.large || entry.media.coverImage?.medium || ''
+                  });
                 }
               });
             }
@@ -202,6 +277,8 @@ export class SongService { private usedTopAnimes=new Set<string>();
            return of(false);
         }
         
+        this.userAnilist = [...userAnimeTitles];
+        
         let maxToLoad = Math.min(amount || 15, userAnimeTitles.length, 20); // max 20 per evitare timeout
         const randomPicks: string[] = [];
         
@@ -209,7 +286,7 @@ export class SongService { private usedTopAnimes=new Set<string>();
         for (let i = 0; i < maxToLoad; i++) {
           if(available.length === 0) break;
           const idx = Math.floor(Math.random() * available.length);
-          randomPicks.push(available[idx]);
+          randomPicks.push(available[idx].title);
           available.splice(idx, 1);
         }
         
