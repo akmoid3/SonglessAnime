@@ -344,7 +344,7 @@ export class SongService { private usedTopAnimes=new Set<string>();
     const query = `
       query ($search: String) {
         Page(page: 1, perPage: 15) {
-          media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
+          media(search: $search, type: ANIME, sort: SEARCH_MATCH, isAdult: false) {
             title {
               romaji
               english
