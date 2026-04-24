@@ -1,227 +1,217 @@
-﻿<div class="min-h-screen bg-[#191919] text-white flex flex-col items-center py-6 font-sans">
+<div class="h-[100dvh] w-full bg-[#09090b] text-zinc-100 flex flex-col items-center py-4 font-sans selection:bg-emerald-500/30 overflow-hidden">
   <!-- Header -->
-  <div class="w-full flex justify-center relative items-center px-6 mb-6 max-w-4xl">   
-    
+  <div class="w-full flex justify-between items-center px-8 mb-4 max-w-5xl shrink-0">
     <!-- Settings Button (Left) -->
-    <div class="absolute left-6 z-[40]" *ngIf="gameStatus !== 'setup'">
-      <button (click)="toggleMenu()" class="w-10 h-10 rounded-full border border-gray-600 flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-400 transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <div *ngIf="gameStatus !== 'setup'">
+      <button (click)="toggleMenu()"
+        class="w-12 h-12 rounded-full flex items-center justify-center text-zinc-500 hover:text-zinc-100 hover:bg-zinc-900/50 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       </button>
     </div>
-
-    <!-- Settings Modal -->
-    <div *ngIf="isMenuOpen" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-      <div class="bg-[#1e1e1e] border border-[#333] rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in text-left">
-        <!-- Modal Header -->
-        <div class="flex justify-between items-center p-6 border-b border-[#333]">
-          <h2 class="text-lg font-bold text-white flex items-center gap-3 tracking-wide">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-            </svg>
-            GAME CONFIGURATION
-          </h2>
-          <button (click)="toggleMenu()" class="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-all duration-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <!-- Modal Body -->
-        <div class="p-6 md:p-8 space-y-10 overflow-y-auto max-h-[75vh]">
-          
-          <!-- Game Mode -->
-          <div>
-            <h3 class="text-xs uppercase font-bold text-gray-500 tracking-[0.15em] mb-4">Select Game Mode</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <button (click)="setMode('anilist')"
-                      [ngClass]="mode === 'anilist' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
-                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
-                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="mode === 'anilist'">AniList</span>
-                <span class="text-sm opacity-70 leading-snug font-medium">Use your AniList completed shows.</span>
-              </button>
-              
-              <button (click)="setMode('random')"
-                      [ngClass]="mode === 'random' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
-                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
-                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="mode === 'random'">Random</span>
-                <span class="text-sm opacity-70 leading-snug font-medium">Completely random anime songs.</span>
-              </button>
-              
-              <button (click)="setMode('top')"
-                      [ngClass]="mode === 'top' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
-                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
-                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="mode === 'top'">Top Anime</span>
-                <span class="text-sm opacity-70 leading-snug font-medium">Top rated and popular anime opening.</span>
-              </button>
-
-              <button (click)="setMode('seasonal')"
-                      [ngClass]="mode === 'seasonal' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
-                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
-                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="mode === 'seasonal'">Seasonal</span>
-                <span class="text-sm opacity-70 leading-snug font-medium">Anime from current or recent seasons.</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Game Style -->
-          <div>
-            <h3 class="text-xs uppercase font-bold text-gray-500 tracking-[0.15em] mb-4">Select Game Style</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <button (click)="setGameStyle('classic')"
-                      [ngClass]="gameStyle === 'classic' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
-                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
-                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="gameStyle === 'classic'">Classic</span>
-                <span class="text-sm opacity-70 leading-snug font-medium">Type the name. Fails increase listen time.</span>
-              </button>
-
-              <button (click)="setGameStyle('multiple-choice')"
-                      [ngClass]="gameStyle === 'multiple-choice' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
-                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
-                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="gameStyle === 'multiple-choice'">Multiple Choice</span>
-                <span class="text-sm opacity-70 leading-snug font-medium">Listen for 15s, pick 1 of 4 options.</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- AniList Username Input (Modal) -->
-          <div *ngIf="mode === 'anilist'" class="p-6 bg-[#161616] rounded-2xl border border-[#333]">
-            <label class="block text-xs uppercase tracking-[0.1em] font-bold text-gray-500 mb-3">AniList Username</label>
-            <input type="text"
-                   [(ngModel)]="anilistUsername"
-                   (keyup.enter)="applySettings()"
-                   placeholder="Enter your Anilist username..."
-                   class="w-full bg-[#0a0a0a] text-white border border-[#444] focus:border-white focus:ring-1 focus:ring-white focus:outline-none rounded-xl px-5 py-4 font-medium transition-all duration-300 placeholder:text-gray-600">
-          </div>
-
-        </div>
-
-        <!-- Modal Footer -->
-        <div class="p-5 border-t border-[#333] flex justify-end bg-[#141414]">
-          <button (click)="applySettings()" 
-                  [disabled]="mode === 'anilist' && !anilistUsername.trim()"
-                  [ngClass]="(mode === 'anilist' && !anilistUsername.trim()) ? 'opacity-50 cursor-not-allowed scale-100' : 'bg-white hover:bg-gray-200 hover:scale-[1.02]'"
-                  class="px-8 py-3 text-black font-extrabold text-sm tracking-wider uppercase rounded-xl transition-all duration-300">
-            Apply & Restart
-          </button>
-        </div>
-      </div>
-    </div>
+    <div *ngIf="gameStatus === 'setup'" class="w-12"></div> <!-- Spacer -->
 
     <div class="flex flex-col items-center">
-      <h1 class="text-4xl font-extrabold tracking-tighter">Songless Anime</h1>
-      <div *ngIf="gameStatus === 'playing' || gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'finished'" 
-           class="mt-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] tracking-[0.2em] font-bold text-gray-400 uppercase flex gap-2">
-        <span class="text-white">{{mode}}</span>
-        <span>•</span>
-        <span class="text-white">{{gameStyle}}</span>
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-white">Songless Anime</h1>
+      <div
+        *ngIf="gameStatus === 'playing' || gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'finished'"
+        class="mt-2 px-4 py-1.5 bg-zinc-900 border border-zinc-800 rounded-full text-xs tracking-widest font-bold text-zinc-400 uppercase flex gap-3 items-center shadow-md">
+        <span class="text-zinc-100">{{mode}}</span>
+        <span class="w-1 h-1 rounded-full bg-zinc-700"></span>
+        <span class="text-zinc-100">{{gameStyle}}</span>
         <ng-container *ngIf="mode === 'anilist'">
-          <span>•</span>
-          <span class="text-[#02A9FF]">{{activeAnilistUsername}}</span>
+          <span class="w-1 h-1 rounded-full bg-zinc-700"></span>
+          <span class="text-emerald-500">{{activeAnilistUsername}}</span>
         </ng-container>
       </div>
     </div>
-    
+
     <!-- Volume as the right icon -->
-    <div class="group absolute right-6 flex justify-end">
-      <button class="w-10 h-10 rounded-full border border-gray-600 flex flex-col items-center justify-center text-gray-400 hover:text-white hover:border-gray-400 transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z" />
+    <div class="group relative flex justify-end">
+      <button
+        class="w-12 h-12 rounded-full flex items-center justify-center text-zinc-500 hover:text-zinc-100 hover:bg-zinc-900/50 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10v4a2 2 0 002 2h2l4 4V4L9 8H7a2 2 0 00-2 2z" />
         </svg>
       </button>
-      <div class="absolute pt-6 right-0 top-4 hidden group-hover:block z-50">
-        <div class="bg-[#222] p-4 rounded shadow-xl border border-[#333]">
-          <input type="range" min="0" max="1" step="0.01" [(ngModel)]="volume" (ngModelChange)="onVolumeChange()" class="w-28 cursor-pointer">
+      <div class="absolute pt-4 right-0 top-10 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-50">
+        <div class="bg-zinc-900/90 backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-zinc-800">
+          <input type="range" min="0" max="1" step="0.01" [(ngModel)]="volume" (ngModelChange)="onVolumeChange()"
+            class="w-32 accent-emerald-500 h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer">
         </div>
       </div>
     </div>
   </div>
 
-  <div class="w-full max-w-2xl flex-1 flex flex-col px-4">
-    <!-- Setup State (Initial Selection) -->
-    <div *ngIf="gameStatus === 'setup'" class="flex-1 flex flex-col items-center justify-center py-6 w-full max-w-2xl mx-auto">
-      <div class="bg-[#1e1e1e] border border-[#333] rounded-2xl w-full shadow-2xl overflow-hidden flex flex-col text-left animate-fade-in">
-        <div class="p-6 md:p-8 space-y-8">
-          
-          <div class="text-center mb-4">
-            <h2 class="text-3xl font-extrabold text-white mb-3 tracking-wide drop-shadow-md">SONGLESS ANIME</h2>
-            <p class="text-gray-400 text-sm tracking-[0.1em] uppercase">Configure your game to get started</p>
+  <!-- Settings Modal -->
+  <div *ngIf="isMenuOpen"
+    class="fixed inset-0 bg-[#09090b]/90 backdrop-blur-xl z-[60] flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl overflow-hidden flex flex-col animate-fade-in text-left">
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center mb-8">
+        <h2 class="text-4xl font-extrabold tracking-tight text-white">
+          Configuration
+        </h2>
+        <button (click)="toggleMenu()"
+          class="p-3 rounded-full hover:bg-zinc-900 text-zinc-500 hover:text-white transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="space-y-8 overflow-y-auto max-h-[75vh] pb-8 hide-scrollbar">
+        <!-- Game Mode -->
+        <div>
+          <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">Game Mode</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button (click)="setMode('anilist')"
+              [ngClass]="mode === 'anilist' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="mode === 'anilist'">AniList</span>
+              <span class="text-base text-zinc-500">Use your AniList completed shows.</span>
+            </button>
+
+            <button (click)="setMode('random')"
+              [ngClass]="mode === 'random' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="mode === 'random'">Random</span>
+              <span class="text-base text-zinc-500">Completely random anime songs.</span>
+            </button>
+
+            <button (click)="setMode('top')"
+              [ngClass]="mode === 'top' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="mode === 'top'">Top Anime</span>
+              <span class="text-base text-zinc-500">Top rated and popular anime openings.</span>
+            </button>
+
+            <button (click)="setMode('seasonal')"
+              [ngClass]="mode === 'seasonal' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="mode === 'seasonal'">Seasonal</span>
+              <span class="text-base text-zinc-500">Anime from current or recent seasons.</span>
+            </button>
           </div>
-
-          <!-- Game Mode -->
-          <div>
-            <h3 class="text-xs uppercase font-bold text-gray-500 tracking-[0.15em] mb-4">Select Game Mode</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <button (click)="setMode('anilist')"
-                      [ngClass]="mode === 'anilist' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
-                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
-                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="mode === 'anilist'">AniList</span>
-                <span class="text-sm opacity-70 leading-snug font-medium">Use your AniList completed shows.</span>
-              </button>
-              
-              <button (click)="setMode('random')"
-                      [ngClass]="mode === 'random' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
-                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
-                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="mode === 'random'">Random</span>
-                <span class="text-sm opacity-70 leading-snug font-medium">Completely random anime songs.</span>
-              </button>
-              
-              <button (click)="setMode('top')"
-                      [ngClass]="mode === 'top' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
-                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
-                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="mode === 'top'">Top Anime</span>
-                <span class="text-sm opacity-70 leading-snug font-medium">Top rated and popular anime opening.</span>
-              </button>
-
-              <button (click)="setMode('seasonal')"
-                      [ngClass]="mode === 'seasonal' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
-                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
-                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="mode === 'seasonal'">Seasonal</span>
-                <span class="text-sm opacity-70 leading-snug font-medium">Anime from current or recent seasons.</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Game Style -->
-          <div>
-            <h3 class="text-xs uppercase font-bold text-gray-500 tracking-[0.15em] mb-4">Select Game Style</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <button (click)="setGameStyle('classic')"
-                      [ngClass]="gameStyle === 'classic' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
-                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
-                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="gameStyle === 'classic'">Classic</span>
-                <span class="text-sm opacity-70 leading-snug font-medium">Type the name. Fails increase listen time.</span>
-              </button>
-
-              <button (click)="setGameStyle('multiple-choice')"
-                      [ngClass]="gameStyle === 'multiple-choice' ? 'border-white bg-white/10 text-white ring-1 ring-white shadow-[0_0_15px_rgba(255,255,255,0.1)] scale-[1.02]' : 'border-[#333] bg-transparent text-gray-400 hover:text-white hover:border-[#666] hover:bg-white/5'"
-                      class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 ease-out text-left group">
-                <span class="font-bold text-lg mb-1 transition-colors" [class.text-white]="gameStyle === 'multiple-choice'">Multiple Choice</span>
-                <span class="text-sm opacity-70 leading-snug font-medium">Listen for 15s, pick 1 of 4 options.</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- AniList Username Input -->
-          <div *ngIf="mode === 'anilist'" class="p-6 bg-[#161616] rounded-2xl border border-[#333]">
-            <label class="block text-xs uppercase tracking-[0.1em] font-bold text-gray-500 mb-3">AniList Username</label>
-            <input type="text"
-                   [(ngModel)]="anilistUsername"
-                   (keyup.enter)="startGameFromSetup()"
-                   placeholder="Enter your Anilist username..."
-                   class="w-full bg-[#0a0a0a] text-white border border-[#444] focus:border-white focus:ring-1 focus:ring-white focus:outline-none rounded-xl px-5 py-4 font-medium transition-all duration-300 placeholder:text-gray-600">
-          </div>
-
         </div>
 
-        <div class="p-6 border-t border-[#333] bg-[#141414] flex justify-center">
-          <button (click)="startGameFromSetup()" 
-                  [disabled]="mode === 'anilist' && !anilistUsername.trim()"
-                  [ngClass]="(mode === 'anilist' && !anilistUsername.trim()) ? 'opacity-50 cursor-not-allowed scale-100' : 'hover:scale-[1.02] shadow-[0_0_20px_rgba(255,255,255,0.15)]'"
-                  class="w-full py-4 bg-white text-black text-sm tracking-[0.15em] font-extrabold rounded-xl transition-all duration-300 uppercase">
+        <!-- Game Style -->
+        <div>
+          <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">Game Style</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button (click)="setGameStyle('classic')"
+              [ngClass]="gameStyle === 'classic' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="gameStyle === 'classic'">Classic</span>
+              <span class="text-base text-zinc-500">Type the name. Fails increase listen time.</span>
+            </button>
+
+            <button (click)="setGameStyle('multiple-choice')"
+              [ngClass]="gameStyle === 'multiple-choice' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="gameStyle === 'multiple-choice'">Multiple Choice</span>
+              <span class="text-base text-zinc-500">Listen for 15s, pick 1 of 4 options.</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- AniList Username Input (Modal) -->
+        <div *ngIf="mode === 'anilist'" class="animate-fade-in">
+          <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">AniList Username</span>
+          <input type="text" [(ngModel)]="anilistUsername" (keyup.enter)="applySettings()"
+            placeholder="Enter your username..."
+            class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-5 py-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-white focus:ring-1 focus:ring-white shadow-lg transition-all text-xl">
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="mt-6 pt-6 border-t border-zinc-900/50">
+        <button (click)="applySettings()" [disabled]="mode === 'anilist' && !anilistUsername.trim()"
+          class="w-full bg-white text-black font-bold rounded-2xl py-4 text-base tracking-widest uppercase hover:bg-zinc-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+          Apply & Restart
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-full max-w-3xl flex-1 flex flex-col px-4 overflow-y-auto hide-scrollbar">
+    <!-- Setup State (Initial Selection) -->
+    <div *ngIf="gameStatus === 'setup'"
+      class="flex-1 flex flex-col justify-center w-full mx-auto animate-fade-in py-2">
+      
+      <div class="space-y-8">
+        <!-- Game Mode -->
+        <div>
+          <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">Game Mode</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button (click)="setMode('anilist')"
+              [ngClass]="mode === 'anilist' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="mode === 'anilist'">AniList</span>
+              <span class="text-base text-zinc-500">Use your AniList completed shows.</span>
+            </button>
+
+            <button (click)="setMode('random')"
+              [ngClass]="mode === 'random' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="mode === 'random'">Random</span>
+              <span class="text-base text-zinc-500">Completely random anime songs.</span>
+            </button>
+
+            <button (click)="setMode('top')"
+              [ngClass]="mode === 'top' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="mode === 'top'">Top Anime</span>
+              <span class="text-base text-zinc-500">Top rated and popular anime opening.</span>
+            </button>
+
+            <button (click)="setMode('seasonal')"
+              [ngClass]="mode === 'seasonal' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="mode === 'seasonal'">Seasonal</span>
+              <span class="text-base text-zinc-500">Anime from current or recent seasons.</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Game Style -->
+        <div>
+          <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">Game Style</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button (click)="setGameStyle('classic')"
+              [ngClass]="gameStyle === 'classic' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="gameStyle === 'classic'">Classic</span>
+              <span class="text-base text-zinc-500">Type the name. Fails increase listen time.</span>
+            </button>
+
+            <button (click)="setGameStyle('multiple-choice')"
+              [ngClass]="gameStyle === 'multiple-choice' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="gameStyle === 'multiple-choice'">Multiple Choice</span>
+              <span class="text-base text-zinc-500">Listen for 15s, pick 1 of 4 options.</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- AniList Username Input -->
+        <div *ngIf="mode === 'anilist'" class="animate-fade-in">
+          <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">AniList Username</span>
+          <input type="text" [(ngModel)]="anilistUsername" (keyup.enter)="startGameFromSetup()"
+            placeholder="Enter your username..."
+            class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-5 py-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-white focus:ring-1 focus:ring-white shadow-lg transition-all text-xl">
+        </div>
+
+        <div class="pt-2">
+          <button (click)="startGameFromSetup()" [disabled]="mode === 'anilist' && !anilistUsername.trim()"
+            class="w-full bg-white text-black font-bold rounded-2xl py-4 text-base tracking-widest uppercase hover:bg-zinc-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white shadow-xl">
             Start Game
           </button>
         </div>
@@ -229,98 +219,93 @@
     </div>
 
     <!-- Loading State -->
-    <div *ngIf="gameStatus === 'loading' && ((mode !== 'anilist') || (mode === 'anilist' && isAnilistLoading))" class="flex-1 flex flex-col items-center justify-center py-8">
-      <div class="w-12 h-12 border-4 border-[#333] border-t-[#4caf50] rounded-full animate-spin mb-4"></div>
-      <p class="text-gray-400 font-semibold tracking-wide">Loading Anime Database...</p>
+    <div *ngIf="gameStatus === 'loading' && ((mode !== 'anilist') || (mode === 'anilist' && isAnilistLoading))"
+      class="flex-1 flex flex-col items-center justify-center">
+      <div class="w-16 h-16 border-4 border-zinc-800 border-t-emerald-500 rounded-full animate-spin mb-6"></div>
+      <p class="text-sm font-bold tracking-widest text-zinc-500 uppercase">Loading Database</p>
     </div>
 
     <!-- Error State -->
-    <div *ngIf="gameStatus === 'error'" class="flex-1 flex flex-col items-center justify-center py-8 text-center">
-      <svg class="h-12 w-12 text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <div *ngIf="gameStatus === 'error'" class="flex-1 flex flex-col items-center justify-center text-center">
+      <svg class="h-20 w-20 text-red-500 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      <p class="text-red-400 font-bold mb-2">Error connecting to database</p>
-      <p class="text-sm text-gray-400 mb-6">{{ errorMessage }}</p>
-      <button (click)="retryLoad()" class="px-6 py-2 bg-[#4caf50] text-white rounded font-bold uppercase transition-colors">
+      <p class="text-3xl font-bold mb-3 text-white">Connection Error</p>
+      <p class="text-lg text-zinc-500 mb-8 max-w-md">{{ errorMessage }}</p>
+      <button (click)="retryLoad()"
+        class="bg-white text-black font-bold rounded-xl px-12 py-4 hover:bg-zinc-200 transition-all text-base tracking-widest uppercase">
         Retry
       </button>
     </div>
 
     <!-- Playing State -->
-    <div *ngIf="gameStatus === 'playing'" class="flex-1 flex flex-col w-full max-w-2xl mx-auto relative">
-      
+    <div *ngIf="gameStatus === 'playing'" class="flex-1 flex flex-col w-full mx-auto relative animate-fade-in justify-center">
+
       <!-- Round Info -->
-      <div class="flex justify-between items-center text-gray-400 font-bold text-sm tracking-widest uppercase mb-4 px-4 w-full">
-         <div>Round <span class="text-white">{{ currentRound }} <span class="opacity-50">/</span> {{ maxRounds }}</span></div>
-         <div>Score <span class="text-[#4caf50]">{{ score }}</span></div>
+      <div
+        class="flex justify-between items-center text-xs font-bold tracking-widest text-zinc-500 uppercase mb-4 w-full px-2">
+        <div>Round <span class="text-zinc-100 ml-2 text-base">{{ currentRound }} <span class="text-zinc-700 font-normal">/</span> {{ maxRounds }}</span>
+        </div>
+        <div>Score <span class="text-emerald-500 ml-2 text-base">{{ score }}</span></div>
       </div>
 
-      <!-- Guess List -->
-      <div *ngIf="gameStyle === 'classic'" class="w-full flex flex-col items-center justify-start space-y-3 mb-10">
-        <div *ngFor="let item of [].constructor(maxLevels); let i = index" 
-             class="h-10 w-full max-w-xl rounded flex items-center justify-center font-semibold text-[13px] tracking-wide transition-colors px-4 truncate"
-             [ngClass]="{
-               'bg-[#303030] text-gray-200': i < level - 1 && guesses[i] === 'Skipped',
-               'bg-yellow-600 text-white': i < level - 1 && guesses[i] !== 'Skipped' && isCloseGuess(guesses[i]),
-               'bg-red-600 text-white': i < level - 1 && guesses[i] !== 'Skipped' && !isCloseGuess(guesses[i]),
-               'border border-[#303030] bg-transparent': i >= level - 1
+      <!-- Guess List (Classic) -->
+      <div *ngIf="gameStyle === 'classic'" class="w-full flex flex-col gap-2 mb-6">
+        <div *ngFor="let item of [].constructor(maxLevels); let i = index"
+          class="h-10 w-full rounded-xl flex items-center px-4 font-semibold text-base transition-all"
+          [ngClass]="{
+               'bg-zinc-900/50 text-zinc-500 border border-transparent': i < level - 1 && guesses[i] === 'Skipped',
+               'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30': i < level - 1 && guesses[i] !== 'Skipped' && isCloseGuess(guesses[i]),
+               'bg-red-500/10 text-red-500 border border-red-500/30': i < level - 1 && guesses[i] !== 'Skipped' && !isCloseGuess(guesses[i]),
+               'border border-zinc-800 bg-transparent text-zinc-600': i >= level - 1
              }">
-             <ng-container *ngIf="i < level - 1">
-               {{ guesses[i] === 'Skipped' ? 'Skipped' : guesses[i] }}
-             </ng-container>
+          <ng-container *ngIf="i < level - 1">
+            {{ guesses[i] === 'Skipped' ? 'Skipped' : guesses[i] }}
+          </ng-container>
         </div>
       </div>
-      
+
       <!-- Progress Line -->
-      <div class="w-full mb-12 relative px-4">
-        <!-- Floating time indicator (caret) -->
+      <div class="w-full mt-8 mb-8 relative">
+        <div class="w-full h-2 bg-zinc-900 rounded-full relative overflow-hidden">
+          <div class="absolute top-0 left-0 h-full bg-emerald-500 z-10 transition-all duration-75 shadow-[0_0_10px_rgba(16,185,129,0.8)]"
+            [style.width.%]="(currentTime / 15.0) * 100">
+          </div>
+          <!-- Allowed duration fill -->
+          <div class="absolute top-0 left-0 h-full bg-zinc-800 z-0 transition-all duration-300"
+            [style.width.%]="(getPlayDuration() / 15.0) * 100">
+          </div>
+        </div>
+        
         <ng-container *ngIf="gameStyle === 'classic'">
-          <div class="w-full relative h-0">
-            <div class="absolute -top-[30px] whitespace-nowrap text-[15px] font-bold text-white flex flex-col items-center transform -translate-x-1/2 transition-all duration-300 z-30"
-                 [style.left.%]="(getPlayDuration() / 15.0) * 100">
-              <span>{{ getPlayDuration() }} seconds</span>
-              <div class="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-t-white border-l-transparent border-r-transparent mt-[1px]"></div>
-            </div>
+          <div class="absolute -top-[34px] whitespace-nowrap text-xs font-bold tracking-widest text-zinc-400 flex flex-col items-center transform -translate-x-1/2 transition-all duration-300 z-30"
+            [style.left.%]="(getPlayDuration() / 15.0) * 100">
+            <span>{{ getPlayDuration() }}S</span>
+            <div class="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[6px] border-l-transparent border-r-transparent border-t-zinc-500 mt-1"></div>
           </div>
         </ng-container>
-
-        <!-- Duration segmented bar -->
-        <div class="w-full h-[14px] bg-[#2a2a2a] rounded-sm flex select-none relative overflow-hidden">
-          <div class="absolute top-0 left-0 h-full bg-[#4caf50] z-10 transition-all duration-75"
-               [style.width.%]="(currentTime / 15.0) * 100">
-          </div>
-          
-          <ng-container *ngIf="gameStyle === 'classic'">
-            <div class="h-full border-r border-[#191919] z-20" style="width: 0.66%"></div>
-            <div class="h-full border-r border-[#191919] z-20" style="width: 2.66%"></div>
-            <div class="h-full border-r border-[#191919] z-20" style="width: 10%"></div>
-            <div class="h-full border-r border-[#191919] z-20" style="width: 13.33%"></div>
-            <div class="h-full border-r border-[#191919] z-20" style="width: 26.66%"></div>
-          </ng-container>
-          
-          <div class="absolute top-0 left-0 h-full bg-[#444] z-0 transition-all duration-300"
-               [style.width.%]="(getPlayDuration() / 15.0) * 100">
-          </div>
-        </div>
       </div>
 
       <!-- Play Button Area -->
-      <div class="flex justify-center mb-10 pt-2">
-        <button (click)="togglePlay()" 
-                class="w-16 h-16 rounded-full flex flex-col items-center justify-center transition-all bg-[#4caf50] hover:bg-[#45a049] text-white cursor-pointer relative overflow-hidden focus:outline-none">
+      <div class="flex justify-center mb-8 shrink-0">
+        <button (click)="togglePlay()"
+          class="w-20 h-20 shrink-0 rounded-full flex flex-col items-center justify-center transition-all bg-emerald-500 text-white cursor-pointer relative overflow-hidden focus:outline-none shadow-[0_0_50px_-12px_rgba(16,185,129,0.5)] hover:scale-105 hover:bg-emerald-400">
           <ng-container *ngIf="isBuffering; else iconState">
-            <div class="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+            <div class="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
           </ng-container>
 
           <ng-template #iconState>
             <ng-container *ngIf="isPlaying; else playIcon">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                 <rect x="6" y="5" width="4" height="14" rx="1"></rect>
-                 <rect x="14" y="5" width="4" height="14" rx="1"></rect>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="currentColor"
+                viewBox="0 0 24 24">
+                <rect x="6" y="5" width="4" height="14" rx="1"></rect>
+                <rect x="14" y="5" width="4" height="14" rx="1"></rect>
               </svg>
             </ng-container>
             <ng-template #playIcon>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 ml-1 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-11 w-11 ml-1 text-white" fill="currentColor"
+                viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </ng-template>
@@ -330,67 +315,69 @@
 
       <!-- Classic Input Area -->
       <ng-container *ngIf="gameStyle === 'classic'">
-        <!-- Search Area -->
-        <div class="w-full flex items-center justify-center gap-2 mb-4">
-           <div class="relative w-full max-w-lg">
-              <div class="flex items-center bg-[#222222] border-[1.5px] border-transparent focus-within:border-[#333] rounded px-4 py-3 h-[52px] transition-colors relative"
-                   [ngClass]="{'border-red-500': showWrongFeedback, 'border-yellow-500': showCloseFeedback}">
-                <svg class="h-5 w-5 text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input type="text"
-                       [(ngModel)]="guess"
-                       (ngModelChange)="onSearchChange()"
-                       (focus)="onSearchChange()"
-                       class="flex-1 bg-transparent text-white focus:outline-none placeholder-gray-500 font-medium text-[15px]"
-                       placeholder="Search an anime...">
-              </div>
-              
-              <ul *ngIf="filteredNames.length > 0" 
-                  class="absolute bottom-full mb-2 w-full bg-[#222] border border-[#333] shadow-2xl max-h-96 overflow-y-auto z-50 text-left rounded-md">
-                <li *ngFor="let result of filteredNames" 
-                    (click)="selectGuess(result.title)"
-                    class="px-4 py-3 hover:bg-[#333] cursor-pointer text-base font-medium border-b border-[#333] last:border-b-0 text-white flex items-center gap-4">
-                  <img *ngIf="result.imageUrl" [src]="result.imageUrl" class="w-14 h-20 object-cover rounded flex-shrink-0 shadow-md">
-                  <div *ngIf="!result.imageUrl" class="w-14 h-20 rounded bg-gray-700 flex-shrink-0 shadow-md"></div>
-                  <span class="truncate drop-shadow-md">{{ result.title }}</span>
-                </li>
-              </ul>
-           </div>
-        </div>
-        <div class="flex justify-center gap-3 w-full max-w-lg mx-auto">
-          <button (click)="skip()" class="px-6 h-[46px] w-[130px] bg-[#333] hover:bg-[#444] text-white font-semibold rounded text-sm transition-colors whitespace-nowrap">
-            {{ level === maxLevels ? 'Give up' : 'Skip' }}
-          </button>
-          <button (click)="submitGuess()" 
-                  [disabled]="!hasSelectedGuess"
-                  class="px-6 h-[46px] w-[130px] font-semibold rounded text-sm transition-colors whitespace-nowrap"
-                  [ngClass]="hasSelectedGuess ? 'bg-[#4caf50] hover:bg-[#439e47] text-white' : 'bg-gray-600 text-gray-400 cursor-not-allowed'">
-            Submit
-          </button>
+        <div class="w-full flex flex-col gap-4">
+          <div class="relative w-full">
+            <div
+              class="flex items-center bg-zinc-900 border border-zinc-700 focus-within:border-white focus-within:ring-1 focus-within:ring-white rounded-xl px-4 py-3 transition-all shadow-lg"
+              [ngClass]="{'border-red-500 focus-within:border-red-500 focus-within:ring-red-500': showWrongFeedback, 'border-yellow-500 focus-within:border-yellow-500 focus-within:ring-yellow-500': showCloseFeedback}">
+              <svg class="h-6 w-6 text-zinc-500 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input type="text" [(ngModel)]="guess" (ngModelChange)="onSearchChange()" (focus)="onSearchChange()"
+                class="flex-1 bg-transparent text-white focus:outline-none placeholder:text-zinc-600 font-semibold text-xl"
+                placeholder="Type anime name...">
+            </div>
+
+            <!-- Autocomplete -->
+            <ul *ngIf="filteredNames.length > 0"
+              class="absolute bottom-full mb-3 w-full bg-zinc-900 border border-zinc-800 shadow-2xl max-h-60 overflow-y-auto z-50 text-left rounded-2xl py-2 hide-scrollbar">
+              <li *ngFor="let result of filteredNames" (click)="selectGuess(result.title)"
+                class="px-5 py-3 hover:bg-zinc-800 cursor-pointer text-lg font-medium text-zinc-300 hover:text-white flex items-center gap-4 transition-colors">
+                <img *ngIf="result.imageUrl" [src]="result.imageUrl"
+                  class="w-10 h-14 object-cover rounded-md flex-shrink-0 shadow-sm">
+                <div *ngIf="!result.imageUrl" class="w-10 h-14 rounded-md bg-zinc-800 flex-shrink-0 shadow-sm"></div>
+                <span class="truncate">{{ result.title }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="flex gap-4 w-full">
+            <button (click)="skip()"
+              class="flex-1 bg-zinc-900 text-zinc-300 border border-zinc-800 rounded-xl hover:bg-zinc-800 py-4 font-bold text-base transition-all tracking-wide">
+              {{ level === maxLevels ? 'Give up' : 'Skip' }}
+            </button>
+            <button (click)="submitGuess()" [disabled]="!hasSelectedGuess"
+              class="flex-[2] font-bold rounded-xl py-4 text-base transition-all tracking-wide"
+              [ngClass]="hasSelectedGuess ? 'bg-white text-black hover:bg-zinc-200 shadow-lg' : 'bg-zinc-900 text-zinc-600 border border-zinc-800 cursor-not-allowed'">
+              Submit
+            </button>
+          </div>
         </div>
       </ng-container>
 
       <!-- Multiple Choice Area -->
       <ng-container *ngIf="gameStyle === 'multiple-choice'">
-        <div class="w-full flex flex-col gap-3 max-w-lg mx-auto md:grid md:grid-cols-2" [ngClass]="{'animate-pulse border-red-500': showWrongFeedback}">
-          <button *ngFor="let opt of multipleChoiceOptions" 
-                  (click)="submitMultipleChoice(opt)"
-                  class="relative w-full bg-[#303030] hover:bg-[#4caf50] text-center text-white py-2 px-3 rounded-lg text-sm sm:text-base font-medium shadow-md transition-colors border border-[#444] hover:shadow-lg overflow-hidden group flex items-center min-h-[80px]">
-            <!-- Sfondo oscurato passivo dell'immagine -->
-            <div *ngIf="opt.imageUrl" class="absolute inset-0 z-0 opacity-20 group-hover:opacity-50 transition-opacity duration-300">
-              <img [src]="opt.imageUrl" class="w-full h-full object-cover blur-[2px] group-hover:blur-0 transition-all duration-300" />
+        <div class="w-full flex flex-col gap-4 md:grid md:grid-cols-2"
+          [ngClass]="{'animate-pulse': showWrongFeedback}">
+          <button *ngFor="let opt of multipleChoiceOptions" (click)="submitMultipleChoice(opt)"
+            class="relative w-full bg-zinc-900/30 border border-zinc-800/50 hover:bg-zinc-900 hover:border-zinc-700 text-left text-zinc-200 py-3 px-5 rounded-3xl font-medium transition-all overflow-hidden group flex items-center min-h-[8.5rem] shadow-md hover:shadow-xl hover:scale-[1.02]">
+            
+            <div *ngIf="opt.imageUrl"
+              class="absolute inset-0 z-0 opacity-10 group-hover:opacity-25 transition-opacity duration-500">
+              <img [src]="opt.imageUrl" class="w-full h-full object-cover blur-sm" />
             </div>
-            
-            <!-- Sfumatura solida sopra l'immagine -->
-            <div *ngIf="opt.imageUrl" class="absolute inset-0 z-0 bg-gradient-to-r from-[#222] via-[#222]/90 to-transparent"></div>
-            
-            <div class="relative z-10 flex items-center gap-3 text-left w-full">
-              <!-- Mini locandina visibile laterale -->
-              <img *ngIf="opt.imageUrl" [src]="opt.imageUrl" class="w-12 h-16 object-cover rounded shadow-md flex-shrink-0" />
-              <div *ngIf="!opt.imageUrl" class="w-12 h-16 bg-gray-600 rounded shadow-md flex-shrink-0 flex items-center justify-center text-xs font-bold text-gray-400">NO IMG</div>
-              
-              <span class="truncate pr-2 drop-shadow-md font-bold">{{ opt.name }}</span>
+
+            <div *ngIf="opt.imageUrl"
+              class="absolute inset-0 z-0 bg-gradient-to-r from-[#09090b] via-[#09090b]/70 to-transparent"></div>
+
+            <div class="relative z-10 flex items-center gap-4 w-full">
+              <img *ngIf="opt.imageUrl" [src]="opt.imageUrl"
+                class="w-24 h-28 object-cover rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex-shrink-0 border border-zinc-800/50" />
+              <div *ngIf="!opt.imageUrl"
+                class="w-24 h-28 bg-zinc-800 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-zinc-600 border border-zinc-800/50">
+                NONE</div>
+              <span class="pr-2 font-bold text-lg md:text-xl group-hover:text-white transition-colors tracking-tight leading-snug line-clamp-3">{{ opt.name }}</span>
             </div>
           </button>
         </div>
@@ -398,49 +385,52 @@
     </div>
 
     <!-- Win / Lose State -->
-    <div *ngIf="gameStatus === 'won' || gameStatus === 'lost'" class="flex-1 flex flex-col items-center justify-center px-4 text-center mt-4">
-      <h2 class="text-3xl font-extrabold tracking-tight mb-2" [ngClass]="gameStatus === 'won' ? 'text-[#4caf50]' : 'text-red-500'">
-        {{ gameStatus === 'won' ? 'Correct!' : 'Incorrect!' }}
+    <div *ngIf="gameStatus === 'won' || gameStatus === 'lost'"
+      class="flex-1 flex flex-col items-center justify-center text-center animate-fade-in w-full pb-6">
+      <h2 class="text-5xl font-black tracking-tight mb-6"
+        [ngClass]="gameStatus === 'won' ? 'text-emerald-500 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.3)]'">
+        {{ gameStatus === 'won' ? 'Correct' : 'Incorrect' }}
       </h2>
-      
-      <div class="flex flex-col items-center bg-[#222] border border-[#333] rounded-lg p-6 mb-8 shadow-2xl w-full max-w-sm mt-6">
-        <div class="w-48 h-48 bg-[#111] rounded overflow-hidden shadow-lg mb-4 relative flex items-center justify-center">
-          <img *ngIf="currentSong?.imageUrl" [src]="currentSong?.imageUrl" alt="Anime Poster" class="w-full h-full object-cover">
-          <div *ngIf="!currentSong?.imageUrl" class="text-gray-600">No Image</div>
+
+      <div class="flex flex-col items-center w-full max-w-md mb-8">
+        <img *ngIf="currentSong?.imageUrl" [src]="currentSong?.imageUrl" alt="Anime Poster"
+          class="w-56 h-56 object-cover rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] mb-6 border border-zinc-800/50">
+        
+        <div *ngIf="!currentSong?.imageUrl" class="w-56 h-56 bg-zinc-900 rounded-3xl shadow-2xl mb-6 border border-zinc-800/50 flex items-center justify-center text-zinc-600 font-bold">
+          No Image
         </div>
-        
-        <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Anime</p>
-        <p class="text-xl font-bold text-white mb-4 leading-tight">{{ currentSong?.name }}</p>
-        
-        <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Song</p>
-        <p class="text-md font-semibold text-gray-300 mb-1 leading-tight">{{ currentSong?.songTitle }}</p>
-        <p class="text-sm text-gray-500">{{ currentSong?.artist }}</p>
+
+        <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-1">Anime</span>
+        <p class="text-3xl font-extrabold text-white mb-6 leading-tight">{{ currentSong?.name }}</p>
+
+        <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-1">Song</span>
+        <p class="text-xl font-bold text-zinc-300 mb-1 leading-tight">{{ currentSong?.songTitle }}</p>
+        <p class="text-base text-zinc-500 font-medium">{{ currentSong?.artist }}</p>
       </div>
-      
-      <button (click)="playNextSongInRound()" 
-              class="w-full max-w-sm bg-white text-black hover:bg-gray-200 py-3 font-bold rounded transition-colors text-lg">
+
+      <button (click)="playNextSongInRound()"
+        class="w-full max-w-md bg-white text-black hover:bg-zinc-200 py-4 font-bold rounded-2xl transition-all text-base uppercase tracking-widest shadow-xl">
         Play Next
       </button>
     </div>
 
     <!-- Finished State (Score) -->
-    <div *ngIf="gameStatus === 'finished'" class="flex-1 flex flex-col items-center justify-center px-4 text-center mt-4">
-      <h2 class="text-4xl font-extrabold tracking-tight mb-4 text-[#4caf50]">
-        Round Complete
-      </h2>
+    <div *ngIf="gameStatus === 'finished'"
+      class="flex-1 flex flex-col items-center justify-center text-center animate-fade-in w-full pb-6">
       
-      <div class="flex flex-col items-center bg-[#222] border border-[#333] rounded-lg p-8 mb-8 shadow-2xl w-full max-w-sm mt-6">
-        <p class="text-sm text-gray-400 font-bold uppercase tracking-wider mb-2">Final Score</p>
-        <div class="text-7xl font-black text-white mb-4">
-          {{ score }}<span class="text-4xl text-gray-500">/{{ maxRounds }}</span>
+      <span class="text-sm font-bold tracking-widest text-zinc-500 uppercase mb-6">Round Complete</span>
+      
+      <div class="flex flex-col items-center mb-12">
+        <div class="text-[9rem] font-black text-white leading-none tracking-tighter drop-shadow-2xl">
+          {{ score }}<span class="text-5xl text-zinc-700">/{{ maxRounds }}</span>
         </div>
-        <p class="text-sm text-gray-400 mt-2">
-          {{ score === maxRounds ? 'Perfect!' : score > maxRounds / 2 ? 'Great job!' : 'Better luck next time!' }}
+        <p class="text-2xl text-emerald-500 font-bold mt-8">
+          {{ score === maxRounds ? 'Perfect Score!' : score > maxRounds / 2 ? 'Great job!' : 'Better luck next time.' }}
         </p>
       </div>
-      
-      <button (click)="restartGame()" 
-              class="w-full max-w-sm bg-[#4caf50] text-white hover:bg-[#45a049] py-3 font-bold rounded transition-colors text-lg">
+
+      <button (click)="restartGame()"
+        class="w-full max-w-md bg-emerald-500 text-white hover:bg-emerald-400 py-4 font-bold rounded-2xl transition-all text-base uppercase tracking-widest shadow-[0_0_30px_-5px_rgba(16,185,129,0.4)]">
         Play Again
       </button>
     </div>
