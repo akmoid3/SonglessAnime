@@ -320,9 +320,12 @@ export class Game implements OnInit, OnDestroy {
       this.isBuffering = true;
     }
     
-    // Tenta di posizionare il cursore temporale (try...catch per precauzione se l'audio non è caricato)
+    // Tenta di posizionare il cursore temporale solo se ci siamo allontanati
+    // Questo evita di forzare il browser a fare una nuova richiesta di Range azzerando la latenza!
     try {
-      this.audio.currentTime = this.startOffset;
+      if (Math.abs(this.audio.currentTime - this.startOffset) > 0.05) {
+        this.audio.currentTime = this.startOffset;
+      }
     } catch (e) {
       // Ignora e continua
     }
