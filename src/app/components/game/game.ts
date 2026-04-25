@@ -42,6 +42,7 @@ export class Game implements OnInit, OnDestroy {
   currentRound: number = 1;
   maxRounds: number = 10;
   score: number = 0;
+  playedAnimeNames: string[] = [];
 
   currentTime: number = 0;
   startOffset: number = 0;
@@ -151,6 +152,7 @@ export class Game implements OnInit, OnDestroy {
     this.stopAudio();
     this.currentRound = 1;
     this.score = 0;
+    this.playedAnimeNames = [];
     
     if (this.mode === 'anilist' && !this.anilistUsername.trim()) {
       this.gameStatus = 'setup';
@@ -238,6 +240,7 @@ export class Game implements OnInit, OnDestroy {
     this.gameStatus = 'playing';
     
     if (this.currentSong) {
+      this.playedAnimeNames.push(this.currentSong.name);
       if (this.gameStyle === 'multiple-choice') {
         this.generateMultipleChoiceOptions();
       }
@@ -448,10 +451,11 @@ export class Game implements OnInit, OnDestroy {
     }
     
     availableOptions.delete(correctName);
+    this.playedAnimeNames.forEach(name => availableOptions.delete(name));
     
     // Se, incredibilmente, il pool non arriva a 3 alternative (4 in totale col corretto), aggiungiamo dei top anime (senza immagini)
     if (availableOptions.size < 3) {
-      TOP_ANIME.forEach(a => { if (!availableOptions.has(a) && a !== correctName) availableOptions.set(a, ''); });
+      TOP_ANIME.forEach(a => { if (!availableOptions.has(a) && a !== correctName && !this.playedAnimeNames.includes(a)) availableOptions.set(a, ''); });
     }
     
     // Convertiamo e assicuriamoci che le esche non abbiano stringhe vuote
