@@ -429,37 +429,46 @@ export class Game implements OnInit, OnDestroy {
     const correctImage = this.currentSong.imageUrl || '';
     const options = [{ name: correctName, imageUrl: correctImage, isCorrect: true }];
     
-    // Mappa per avere name -> imageUrl
-    const availableOptions = new Map<string, string>();
+    // Mappa per avere lowerCaseName -> { name, imageUrl }
+    const availableOptions = new Map<string, {name: string, imageUrl: string}>();
     
     if (this.mode === 'anilist' && this.songService.userAnilist && this.songService.userAnilist.length > 0) {
       // In modalità AniList usa solo le serie che l'utente ha effettivamente completato, memorizzando la loro immagine originale
-      this.songService.userAnilist.forEach(a => availableOptions.set(a.title, a.imageUrl));
+      this.songService.userAnilist.forEach(a => availableOptions.set(a.title.toLowerCase(), {name: a.title, imageUrl: a.imageUrl}));
       // Mix in some global wrong answers if the user's list is relatively small to prevent repetitive options
       if (this.songService.userAnilist.length < 150) {
-        this.songService.wrongAnswersPool.forEach(a => availableOptions.set(a.title, a.imageUrl));
+        this.songService.wrongAnswersPool.forEach(a => availableOptions.set(a.title.toLowerCase(), {name: a.title, imageUrl: a.imageUrl}));
       }
     } else if (this.mode === 'seasonal') {
       // Per la modalità stagionale, usa altri anime stagionali precaricati in background
-      this.localAnimeData.forEach(a => availableOptions.set(a.name, a.imageUrl));
-      this.songService.seasonalWrongAnswersPool.forEach(a => availableOptions.set(a.title, a.imageUrl));
+      this.localAnimeData.forEach(a => availableOptions.set(a.name.toLowerCase(), {name: a.name, imageUrl: a.imageUrl}));
+      this.songService.seasonalWrongAnswersPool.forEach(a => availableOptions.set(a.title.toLowerCase(), {name: a.title, imageUrl: a.imageUrl}));
     } else {
       // Per tutte le altre modalità usa gli anime che sono già nel mazzo della partita (che hanno le immagini)
-      this.localAnimeData.forEach(a => availableOptions.set(a.name, a.imageUrl));
+      this.localAnimeData.forEach(a => availableOptions.set(a.name.toLowerCase(), {name: a.name, imageUrl: a.imageUrl}));
       // E inoltre misceliamo dinamicamente il set di esche globali con la cover scaricata!
-      this.songService.wrongAnswersPool.forEach(a => availableOptions.set(a.title, a.imageUrl));
+      this.songService.wrongAnswersPool.forEach(a => availableOptions.set(a.title.toLowerCase(), {name: a.title, imageUrl: a.imageUrl}));
     }
     
-    availableOptions.delete(correctName);
-    this.playedAnimeNames.forEach(name => availableOptions.delete(name));
+    availableOptions.delete(correctName.toLowerCase());
+    this.playedAnimeNames.forEach(name => availableOptions.delete(name.toLowerCase()));
+    
+    // Rimuovi anche i sinonimi della risposta corretta (es. titolo inglese vs romaji)
+    const synonyms = (this.currentSong?.synonyms || []).map(s => s.toLowerCase().trim());
+    synonyms.forEach(syn => availableOptions.delete(syn));
     
     // Se, incredibilmente, il pool non arriva a 3 alternative (4 in totale col corretto), aggiungiamo dei top anime (senza immagini)
+    const playedLower = this.playedAnimeNames.map(p => p.toLowerCase());
     if (availableOptions.size < 3) {
-      TOP_ANIME.forEach(a => { if (!availableOptions.has(a) && a !== correctName && !this.playedAnimeNames.includes(a)) availableOptions.set(a, ''); });
+      TOP_ANIME.forEach(a => { 
+        if (!availableOptions.has(a.toLowerCase()) && a.toLowerCase() !== correctName.toLowerCase() && !playedLower.includes(a.toLowerCase()) && !synonyms.includes(a.toLowerCase())) {
+          availableOptions.set(a.toLowerCase(), {name: a, imageUrl: ''});
+        }
+      });
     }
     
     // Convertiamo e assicuriamoci che le esche non abbiano stringhe vuote
-    const availableArray = Array.from(availableOptions.entries()).map(([name, imageUrl]) => ({ name, imageUrl }));
+    const availableArray = Array.from(availableOptions.values());
     
     while (options.length < 4 && availableArray.length > 0) {
       const idx = Math.floor(Math.random() * availableArray.length);
