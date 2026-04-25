@@ -432,6 +432,10 @@ export class Game implements OnInit, OnDestroy {
     if (this.mode === 'anilist' && this.songService.userAnilist && this.songService.userAnilist.length > 0) {
       // In modalità AniList usa solo le serie che l'utente ha effettivamente completato, memorizzando la loro immagine originale
       this.songService.userAnilist.forEach(a => availableOptions.set(a.title, a.imageUrl));
+      // Mix in some global wrong answers if the user's list is relatively small to prevent repetitive options
+      if (this.songService.userAnilist.length < 150) {
+        this.songService.wrongAnswersPool.forEach(a => availableOptions.set(a.title, a.imageUrl));
+      }
     } else if (this.mode === 'seasonal') {
       // Per la modalità stagionale, usa altri anime stagionali precaricati in background
       this.localAnimeData.forEach(a => availableOptions.set(a.name, a.imageUrl));

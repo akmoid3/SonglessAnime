@@ -18,6 +18,7 @@ import { TOP_ANIME } from './top_anime';
   providedIn: 'root'
 })
 export class SongService { private usedTopAnimes=new Set<string>();
+  private usedAnilistAnimes=new Set<string>();
   private songs: AnimeSong[] = [];
   private unplayedSongs: AnimeSong[] = [];
   private isLoading = false;
@@ -179,7 +180,16 @@ export class SongService { private usedTopAnimes=new Set<string>();
       }),
       tap((loadedSongs: AnimeSong[]) => {
         console.log(`Loaded ${loadedSongs.length} Seasonal opening songs.`);
-        const uniqueSet = new Set(); this.songs = loadedSongs.filter(s => { if(uniqueSet.has(s.url)){ return false; } uniqueSet.add(s.url); return true; });
+        const uniqueSet = new Set();
+        const uniqueNameSet = new Set();
+        this.songs = loadedSongs.filter(s => { 
+          if(uniqueSet.has(s.url) || uniqueNameSet.has(s.name)){ 
+            return false; 
+          } 
+          uniqueSet.add(s.url); 
+          uniqueNameSet.add(s.name);
+          return true; 
+        });
         this.unplayedSongs = [...this.songs];
         if (this.songs.length === 0) {
           this.errorMessage = 'No songs found for the selected mode. Please retry.';
@@ -282,11 +292,17 @@ export class SongService { private usedTopAnimes=new Set<string>();
         let maxToLoad = Math.min(amount || 15, userAnimeTitles.length, 20); // max 20 per evitare timeout
         const randomPicks: string[] = [];
         
-        let available = [...userAnimeTitles];
+        let available = userAnimeTitles.filter(a => !this.usedAnilistAnimes.has(a.title));
+        if (available.length < maxToLoad) {
+           this.usedAnilistAnimes.clear();
+           available = [...userAnimeTitles];
+        }
+        
         for (let i = 0; i < maxToLoad; i++) {
           if(available.length === 0) break;
           const idx = Math.floor(Math.random() * available.length);
           randomPicks.push(available[idx].title);
+          this.usedAnilistAnimes.add(available[idx].title);
           available.splice(idx, 1);
         }
         
@@ -364,7 +380,16 @@ export class SongService { private usedTopAnimes=new Set<string>();
       }),
       tap((loadedSongs: AnimeSong[]) => {
         console.log(`Loaded ${loadedSongs.length} ${listName} opening songs.`);
-        const uniqueSet = new Set(); this.songs = loadedSongs.filter(s => { if(uniqueSet.has(s.url)){ return false; } uniqueSet.add(s.url); return true; });
+        const uniqueSet = new Set();
+        const uniqueNameSet = new Set();
+        this.songs = loadedSongs.filter(s => { 
+          if(uniqueSet.has(s.url) || uniqueNameSet.has(s.name)) { 
+            return false; 
+          } 
+          uniqueSet.add(s.url); 
+          uniqueNameSet.add(s.name);
+          return true; 
+        });
         this.unplayedSongs = [...this.songs];
         if (this.songs.length === 0) {
           this.errorMessage = `No songs found for the selected ${listName}. Please retry.`;
