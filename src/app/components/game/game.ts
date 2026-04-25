@@ -422,6 +422,10 @@ export class Game implements OnInit, OnDestroy {
     }
   }
 
+  private normalizeTitle(title: string): string {
+    return title ? title.toLowerCase().replace(/[^a-z0-9]/gi, '') : '';
+  }
+
   generateMultipleChoiceOptions(): void {
     if (!this.currentSong) return;
     
@@ -429,45 +433,38 @@ export class Game implements OnInit, OnDestroy {
     const correctImage = this.currentSong.imageUrl || '';
     const options = [{ name: correctName, imageUrl: correctImage, isCorrect: true }];
     
-    // Mappa per avere lowerCaseName -> { name, imageUrl }
+    // Mappa per avere normalizedName -> { name, imageUrl }
     const availableOptions = new Map<string, {name: string, imageUrl: string}>();
     
     if (this.mode === 'anilist' && this.songService.userAnilist && this.songService.userAnilist.length > 0) {
-      // In modalità AniList usa solo le serie che l'utente ha effettivamente completato, memorizzando la loro immagine originale
-      this.songService.userAnilist.forEach(a => availableOptions.set(a.title.toLowerCase(), {name: a.title, imageUrl: a.imageUrl}));
-      // Mix in some global wrong answers if the user's list is relatively small to prevent repetitive options
+      this.songService.userAnilist.forEach(a => availableOptions.set(this.normalizeTitle(a.title), {name: a.title, imageUrl: a.imageUrl}));
       if (this.songService.userAnilist.length < 150) {
-        this.songService.wrongAnswersPool.forEach(a => availableOptions.set(a.title.toLowerCase(), {name: a.title, imageUrl: a.imageUrl}));
+        this.songService.wrongAnswersPool.forEach(a => availableOptions.set(this.normalizeTitle(a.title), {name: a.title, imageUrl: a.imageUrl}));
       }
     } else if (this.mode === 'seasonal') {
-      // Per la modalità stagionale, usa altri anime stagionali precaricati in background
-      this.localAnimeData.forEach(a => availableOptions.set(a.name.toLowerCase(), {name: a.name, imageUrl: a.imageUrl}));
-      this.songService.seasonalWrongAnswersPool.forEach(a => availableOptions.set(a.title.toLowerCase(), {name: a.title, imageUrl: a.imageUrl}));
+      this.localAnimeData.forEach(a => availableOptions.set(this.normalizeTitle(a.name), {name: a.name, imageUrl: a.imageUrl}));
+      this.songService.seasonalWrongAnswersPool.forEach(a => availableOptions.set(this.normalizeTitle(a.title), {name: a.title, imageUrl: a.imageUrl}));
     } else {
-      // Per tutte le altre modalità usa gli anime che sono già nel mazzo della partita (che hanno le immagini)
-      this.localAnimeData.forEach(a => availableOptions.set(a.name.toLowerCase(), {name: a.name, imageUrl: a.imageUrl}));
-      // E inoltre misceliamo dinamicamente il set di esche globali con la cover scaricata!
-      this.songService.wrongAnswersPool.forEach(a => availableOptions.set(a.title.toLowerCase(), {name: a.title, imageUrl: a.imageUrl}));
+      this.localAnimeData.forEach(a => availableOptions.set(this.normalizeTitle(a.name), {name: a.name, imageUrl: a.imageUrl}));
+      this.songService.wrongAnswersPool.forEach(a => availableOptions.set(this.normalizeTitle(a.title), {name: a.title, imageUrl: a.imageUrl}));
     }
     
-    availableOptions.delete(correctName.toLowerCase());
-    this.playedAnimeNames.forEach(name => availableOptions.delete(name.toLowerCase()));
+    availableOptions.delete(this.normalizeTitle(correctName));
+    this.playedAnimeNames.forEach(name => availableOptions.delete(this.normalizeTitle(name)));
     
-    // Rimuovi anche i sinonimi della risposta corretta (es. titolo inglese vs romaji)
-    const synonyms = (this.currentSong?.synonyms || []).map(s => s.toLowerCase().trim());
+    const synonyms = (this.currentSong?.synonyms || []).map(s => this.normalizeTitle(s));
     synonyms.forEach(syn => availableOptions.delete(syn));
     
-    // Se, incredibilmente, il pool non arriva a 3 alternative (4 in totale col corretto), aggiungiamo dei top anime (senza immagini)
-    const playedLower = this.playedAnimeNames.map(p => p.toLowerCase());
+    const playedLower = this.playedAnimeNames.map(p => this.normalizeTitle(p));
     if (availableOptions.size < 3) {
       TOP_ANIME.forEach(a => { 
-        if (!availableOptions.has(a.toLowerCase()) && a.toLowerCase() !== correctName.toLowerCase() && !playedLower.includes(a.toLowerCase()) && !synonyms.includes(a.toLowerCase())) {
-          availableOptions.set(a.toLowerCase(), {name: a, imageUrl: ''});
+        const normA = this.normalizeTitle(a);
+        if (!availableOptions.has(normA) && normA !== this.normalizeTitle(correctName) && !playedLower.includes(normA) && !synonyms.includes(normA)) {
+          availableOptions.set(normA, {name: a, imageUrl: ''});
         }
       });
     }
     
-    // Convertiamo e assicuriamoci che le esche non abbiano stringhe vuote
     const availableArray = Array.from(availableOptions.values());
     
     while (options.length < 4 && availableArray.length > 0) {
