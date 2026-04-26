@@ -19,12 +19,20 @@
       <div
         *ngIf="gameStatus === 'playing' || gameStatus === 'won' || gameStatus === 'lost' || gameStatus === 'finished'"
         class="mt-2 px-4 py-1.5 bg-zinc-900 border border-zinc-800 rounded-full text-xs tracking-widest font-bold text-zinc-400 uppercase flex gap-3 items-center shadow-md">
-        <span class="text-zinc-100">{{mode}}</span>
-        <span class="w-1 h-1 rounded-full bg-zinc-700"></span>
-        <span class="text-zinc-100">{{gameStyle}}</span>
-        <ng-container *ngIf="mode === 'anilist'">
+        <ng-container *ngIf="gameType.startsWith('higher-lower')">
+          <span class="text-zinc-100">Higher or Lower</span>
           <span class="w-1 h-1 rounded-full bg-zinc-700"></span>
-          <span class="text-emerald-500">{{activeAnilistUsername}}</span>
+          <span class="text-emerald-500">{{ gameType === 'higher-lower-score' ? 'Score' : 'Popularity' }}</span>
+        </ng-container>
+
+        <ng-container *ngIf="!gameType.startsWith('higher-lower')">
+          <span class="text-zinc-100">{{mode}}</span>
+          <span class="w-1 h-1 rounded-full bg-zinc-700"></span>
+          <span class="text-zinc-100">{{gameStyle}}</span>
+          <ng-container *ngIf="mode === 'anilist'">
+            <span class="w-1 h-1 rounded-full bg-zinc-700"></span>
+            <span class="text-emerald-500">{{activeAnilistUsername}}</span>
+          </ng-container>
         </ng-container>
       </div>
     </div>
