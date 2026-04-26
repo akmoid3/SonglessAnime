@@ -169,6 +169,33 @@ export class Game implements OnInit, OnDestroy {
     this.score = 0;
     this.playedAnimeNames = [];
     
+    // Higher/Lower doesn't need a mode — load directly
+    if (this.gameType.startsWith('higher-lower')) {
+      this.gameStatus = 'loading';
+      this.cdr.detectChanges();
+      const metric = this.gameType === 'higher-lower-score' ? 'score' : 'popularity';
+      this.songService.loadHigherLowerAnime(metric).subscribe({
+        next: (success) => {
+          if (success) {
+            this.currentSong = this.songService.getRandomSong();
+            this.nextSong = this.songService.getRandomSong();
+            this.higherLowerState = 'guessing';
+            this.gameStatus = 'playing';
+          } else {
+            this.gameStatus = 'error';
+            this.errorMessage = this.songService.errorMessage || 'Failed to load anime stats.';
+          }
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.gameStatus = 'error';
+          this.errorMessage = err.message || 'Error loading Higher/Lower data.';
+          this.cdr.detectChanges();
+        }
+      });
+      return;
+    }
+
     if (this.mode === 'anilist' && !this.anilistUsername.trim()) {
       this.gameStatus = 'setup';
       return;
