@@ -135,7 +135,7 @@
         </div>
 
         <!-- Game Style -->
-        <div *ngIf="gameType === 'audio' || gameType === 'characters'">
+        <div *ngIf="(gameType === 'audio' || gameType === 'characters') && mode !== ''" class="animate-fade-in">
           <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">Game Style</span>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button (click)="setGameStyle('classic')"
@@ -215,7 +215,7 @@
         </div>
 
         <!-- Game Mode -->
-        <div *ngIf="gameType === 'audio' || gameType === 'characters'">
+        <div *ngIf="(gameType === 'audio' || gameType === 'characters') && gameType !== ''" class="animate-fade-in">
           <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">Game Mode</span>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button (click)="setMode('anilist')"
@@ -249,7 +249,7 @@
         </div>
 
         <!-- Game Style -->
-        <div *ngIf="gameType === 'audio' || gameType === 'characters'">
+        <div *ngIf="(gameType === 'audio' || gameType === 'characters') && mode !== ''" class="animate-fade-in">
           <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">Game Style</span>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button (click)="setGameStyle('classic')"
@@ -276,8 +276,9 @@
             class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-5 py-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-white focus:ring-1 focus:ring-white shadow-lg transition-all text-xl">
         </div>
 
-        <div class="pt-2">
-          <button (click)="startGameFromSetup()" [disabled]="mode === 'anilist' && !anilistUsername.trim()"
+        <div class="pt-2 animate-fade-in" *ngIf="gameType !== ''">
+          <button (click)="startGameFromSetup()" 
+            [disabled]="!gameType || (!gameType.startsWith('higher-lower') && (!mode || !gameStyle || (mode === 'anilist' && !anilistUsername.trim())))"
             class="w-full bg-white text-black font-bold rounded-2xl py-4 text-base tracking-widest uppercase hover:bg-zinc-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white shadow-xl">
             Start Game
           </button>

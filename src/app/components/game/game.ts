@@ -15,9 +15,9 @@ import { TOP_ANIME } from '../../services/top_anime';
   styleUrls: ['./game.scss']
 })
 export class Game implements OnInit, OnDestroy {
-  mode: 'random' | 'top' | 'seasonal' | 'anilist' = 'anilist';
-  gameStyle: 'classic' | 'multiple-choice' = 'classic';
-  gameType: 'audio' | 'characters' | 'higher-lower-score' | 'higher-lower-pop' = 'audio';
+  mode: 'random' | 'top' | 'seasonal' | 'anilist' | '' = '';
+  gameStyle: 'classic' | 'multiple-choice' | '' = '';
+  gameType: 'audio' | 'characters' | 'higher-lower-score' | 'higher-lower-pop' | '' = '';
   anilistUsername: string = '';
   activeAnilistUsername: string = '';
   isAnilistLoading: boolean = false;
@@ -110,6 +110,10 @@ export class Game implements OnInit, OnDestroy {
   }
 
   startGameFromSetup(): void {
+    if (!this.gameType) return;
+    if (!this.gameType.startsWith('higher-lower')) {
+      if (!this.mode || !this.gameStyle) return;
+    }
     if (this.mode === 'anilist' && !this.anilistUsername.trim()) {
       return;
     }
@@ -141,6 +145,10 @@ export class Game implements OnInit, OnDestroy {
   }
 
   applySettings(): void {
+    if (!this.gameType) return;
+    if (!this.gameType.startsWith('higher-lower')) {
+      if (!this.mode || !this.gameStyle) return;
+    }
     if (this.mode === 'anilist' && !this.anilistUsername.trim()) return;
     
     this.activeAnilistUsername = this.anilistUsername.trim();
