@@ -105,7 +105,7 @@ export class SongService { private usedTopAnimes=new Set<string>();
     if (gameType === 'characters') {
       if (mode === 'top') return this.loadTopCharacters();
       if (mode === 'anilist' && anilistUsername) return this.loadAnilistCharacters(anilistUsername, amount);
-      return this.loadRandomCharacters(mode);
+      return this.loadRandomCharacters(mode === 'seasonal' ? 'seasonal' : 'random');
     }
 
     if (mode === 'top') {

@@ -411,24 +411,32 @@
         <div class="w-full flex flex-col gap-4 md:grid md:grid-cols-2"
           [ngClass]="{'animate-pulse': showWrongFeedback}">
           <button *ngFor="let opt of multipleChoiceOptions" (click)="submitMultipleChoice(opt)"
-            class="relative w-full bg-zinc-900/30 border border-zinc-800/50 hover:bg-zinc-900 hover:border-zinc-700 text-left text-zinc-200 py-3 px-5 rounded-3xl font-medium transition-all overflow-hidden group flex items-center min-h-[8.5rem] shadow-md hover:shadow-xl hover:scale-[1.02]">
+            class="relative w-full bg-zinc-900/30 border border-zinc-800/50 hover:bg-zinc-900 hover:border-zinc-700 text-left text-zinc-200 py-3 px-5 rounded-3xl font-medium transition-all overflow-hidden group flex items-center shadow-md hover:shadow-xl hover:scale-[1.02]"
+            [ngClass]="gameType === 'characters' ? 'min-h-[5rem] justify-center text-center' : 'min-h-[8.5rem]'">
             
-            <div *ngIf="opt.imageUrl"
-              class="absolute inset-0 z-0 opacity-10 group-hover:opacity-25 transition-opacity duration-500">
-              <img [src]="opt.imageUrl" class="w-full h-full object-cover blur-sm" />
-            </div>
+            <ng-container *ngIf="gameType === 'audio'">
+              <div *ngIf="opt.imageUrl"
+                class="absolute inset-0 z-0 opacity-10 group-hover:opacity-25 transition-opacity duration-500">
+                <img [src]="opt.imageUrl" class="w-full h-full object-cover blur-sm" />
+              </div>
 
-            <div *ngIf="opt.imageUrl"
-              class="absolute inset-0 z-0 bg-gradient-to-r from-[#09090b] via-[#09090b]/70 to-transparent"></div>
+              <div *ngIf="opt.imageUrl"
+                class="absolute inset-0 z-0 bg-gradient-to-r from-[#09090b] via-[#09090b]/70 to-transparent"></div>
 
-            <div class="relative z-10 flex items-center gap-4 w-full">
-              <img *ngIf="opt.imageUrl" [src]="opt.imageUrl"
-                class="w-24 h-28 object-cover rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex-shrink-0 border border-zinc-800/50" />
-              <div *ngIf="!opt.imageUrl"
-                class="w-24 h-28 bg-zinc-800 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-zinc-600 border border-zinc-800/50">
-                NONE</div>
-              <span class="pr-2 font-bold text-lg md:text-xl group-hover:text-white transition-colors tracking-tight leading-snug line-clamp-3">{{ opt.name }}</span>
-            </div>
+              <div class="relative z-10 flex items-center gap-4 w-full">
+                <img *ngIf="opt.imageUrl" [src]="opt.imageUrl"
+                  class="w-24 h-28 object-cover rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex-shrink-0 border border-zinc-800/50" />
+                <div *ngIf="!opt.imageUrl"
+                  class="w-24 h-28 bg-zinc-800 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-zinc-600 border border-zinc-800/50">
+                  NONE</div>
+                <span class="pr-2 font-bold text-lg md:text-xl group-hover:text-white transition-colors tracking-tight leading-snug line-clamp-3">{{ opt.name }}</span>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="gameType === 'characters'">
+              <span class="relative z-10 px-2 font-bold text-xl md:text-2xl group-hover:text-white transition-colors tracking-tight leading-snug line-clamp-2">{{ opt.name }}</span>
+            </ng-container>
+
           </button>
         </div>
       </ng-container>
