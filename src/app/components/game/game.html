@@ -197,6 +197,20 @@
               <span class="font-bold text-xl mb-1" [class.text-white]="gameType === 'characters'">Characters</span>
               <span class="text-base text-zinc-500">Guess from character photos.</span>
             </button>
+
+            <button (click)="setGameType('higher-lower-score')"
+              [ngClass]="gameType === 'higher-lower-score' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="gameType === 'higher-lower-score'">H/L Score</span>
+              <span class="text-base text-zinc-500">Which has a higher score?</span>
+            </button>
+
+            <button (click)="setGameType('higher-lower-pop')"
+              [ngClass]="gameType === 'higher-lower-pop' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="gameType === 'higher-lower-pop'">H/L Pop</span>
+              <span class="text-base text-zinc-500">Which is more popular?</span>
+            </button>
           </div>
         </div>
 
