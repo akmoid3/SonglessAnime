@@ -10,6 +10,8 @@ export interface AnimeSong {
   artist?: string;
   imageUrl?: string;
   synonyms?: string[];
+  characterName?: string;
+  isCharacterMode?: boolean;
 }
 
 import { TOP_ANIME } from './top_anime';
@@ -93,12 +95,18 @@ export class SongService { private usedTopAnimes=new Set<string>();
     });
   }
 
-  loadSongs(amount: number = 20, mode: 'random' | 'top' | 'seasonal' | 'anilist' = 'random', anilistUsername?: string): Observable<boolean> {
+  loadSongs(amount: number = 20, mode: 'random' | 'top' | 'seasonal' | 'anilist' = 'random', anilistUsername?: string, gameType: 'audio' | 'characters' = 'audio'): Observable<boolean> {
     this.isLoading = true;
     this.errorMessage = '';
     
     // Ricarichiamo il pool in background in modo da avere sempre nuove esche per i quiz
     this.ensureWrongAnswersPool(mode);
+
+    if (gameType === 'characters') {
+      if (mode === 'top') return this.loadTopCharacters();
+      if (mode === 'anilist' && anilistUsername) return this.loadAnilistCharacters(anilistUsername, amount);
+      return this.loadRandomCharacters(mode);
+    }
 
     if (mode === 'top') {
       return this.loadTopAnime();
@@ -401,6 +409,192 @@ export class SongService { private usedTopAnimes=new Set<string>();
       catchError(error => {
         console.error(`Error loading ${listName} themes`, error);
         this.errorMessage = error.message || `Failed to load ${listName} songs.`;
+        this.isLoading = false;
+        return of(false);
+      })
+    );
+  }
+
+  private loadTopCharacters(): Observable<boolean> {
+    const randomTop: string[] = [];
+    let topAnimeCopy = TOP_ANIME.filter(a => !this.usedTopAnimes.has(a));
+    if (topAnimeCopy.length < 15) {
+      this.usedTopAnimes.clear();
+      topAnimeCopy = [...TOP_ANIME];
+    }
+    for (let i = 0; i < 15; i++) { 
+        const idx = Math.floor(Math.random() * topAnimeCopy.length);
+        const a = topAnimeCopy[idx];
+        randomTop.push(a);
+        this.usedTopAnimes.add(a);
+        topAnimeCopy.splice(idx, 1);
+    }
+    return this.loadSpecificAnimeCharacters(randomTop, 'Top characters');
+  }
+
+  private loadAnilistCharacters(username: string, amount: number): Observable<boolean> {
+    const query = `
+      query ($userName: String) {
+        MediaListCollection(userName: $userName, type: ANIME, status: COMPLETED) {
+          lists { entries { media { title { romaji } } } }
+        }
+      }
+    `;
+
+    return this.http.post<any>('https://graphql.anilist.co', { query, variables: { userName: username } }).pipe(
+      switchMap(response => {
+        let userAnimeTitles: string[] = [];
+        const lists = response?.data?.MediaListCollection?.lists;
+        if (lists) {
+          lists.forEach((list: any) => {
+            if (list.entries) {
+              list.entries.forEach((entry: any) => {
+                if (entry.media?.title?.romaji) userAnimeTitles.push(entry.media.title.romaji);
+              });
+            }
+          });
+        }
+        
+        if (userAnimeTitles.length === 0) {
+           this.errorMessage = `No completed anime found for "${username}".`;
+           this.isReady = true;
+           this.isLoading = false;
+           return of(false);
+        }
+        
+        let maxToLoad = Math.min(amount || 15, userAnimeTitles.length, 20); 
+        const randomPicks: string[] = [];
+        let available = userAnimeTitles.filter(a => !this.usedAnilistAnimes.has(a));
+        if (available.length < maxToLoad) {
+           this.usedAnilistAnimes.clear();
+           available = [...userAnimeTitles];
+        }
+        
+        for (let i = 0; i < maxToLoad; i++) {
+          if(available.length === 0) break;
+          const idx = Math.floor(Math.random() * available.length);
+          randomPicks.push(available[idx]);
+          this.usedAnilistAnimes.add(available[idx]);
+          available.splice(idx, 1);
+        }
+        
+        return this.loadSpecificAnimeCharacters(randomPicks, `${username}'s AniList characters`);
+      }),
+      catchError(error => {
+        console.error('Error fetching AniList', error);
+        this.errorMessage = `Could not find AniList completions for user "${username}".`;
+        return of(false);
+      })
+    );
+  }
+
+  private loadSpecificAnimeCharacters(animeNames: string[], listName: string): Observable<boolean> {
+    const requests = animeNames.map(animeName => {
+      const query = `
+        query ($search: String) {
+          Media(search: $search, type: ANIME) {
+            title { romaji }
+            characters(sort: ROLE, perPage: 15) { nodes { name { full } image { large } } }
+          }
+        }
+      `;
+      return this.http.post<any>('https://graphql.anilist.co', { query, variables: { search: animeName } }).pipe(
+        map(res => {
+          const media = res?.data?.Media;
+          if (media && media.characters?.nodes?.length > 0) {
+            const chars = media.characters.nodes.filter((c: any) => c.image?.large && !c.image.large.includes('default'));
+            if (chars.length > 0) {
+              const topChars = chars.slice(0, 5);
+              const char = topChars[Math.floor(Math.random() * topChars.length)];
+              return [{
+                id: animeName + char.name.full,
+                name: media.title.romaji || animeName,
+                url: '',
+                songTitle: char.name.full,
+                artist: 'Character',
+                imageUrl: char.image.large,
+                synonyms: [],
+                isCharacterMode: true,
+                characterName: char.name.full
+              } as AnimeSong];
+            }
+          }
+          return [];
+        }),
+        catchError(() => of([]))
+      );
+    });
+
+    return forkJoin(requests).pipe(
+      timeout(15000),
+      map((results: AnimeSong[][]) => results.reduce((acc, val) => acc.concat(val), [])),
+      tap((loadedSongs: AnimeSong[]) => {
+        const uniqueSet = new Set();
+        this.songs = loadedSongs.filter(s => { 
+          if(uniqueSet.has(s.name)) return false; 
+          uniqueSet.add(s.name);
+          return true; 
+        });
+        this.unplayedSongs = [...this.songs];
+        if (this.songs.length === 0) this.errorMessage = `No characters found for ${listName}.`;
+        this.isReady = true;
+        this.isLoading = false;
+      }),
+      map(loadedSongs => loadedSongs.length > 0),
+      catchError(error => {
+        this.errorMessage = error.message || `Failed to load characters.`;
+        this.isLoading = false;
+        return of(false);
+      })
+    );
+  }
+
+  private loadRandomCharacters(mode: 'random' | 'seasonal'): Observable<boolean> {
+    const year = new Date().getFullYear();
+    const query = mode === 'seasonal' 
+      ? `query { Page(page: 1, perPage: 30) { media(type: ANIME, seasonYear: ${year}, sort: POPULARITY_DESC, isAdult: false) { title { romaji } characters(sort: ROLE, perPage: 5) { nodes { name { full } image { large } } } } } }`
+      : `query { Page(page: ${Math.floor(Math.random() * 20) + 1}, perPage: 30) { media(type: ANIME, sort: POPULARITY_DESC, isAdult: false) { title { romaji } characters(sort: ROLE, perPage: 5) { nodes { name { full } image { large } } } } } }`;
+
+    return this.http.post<any>('https://graphql.anilist.co', { query }).pipe(
+      timeout(10000),
+      map(res => {
+        const loaded: AnimeSong[] = [];
+        if (res?.data?.Page?.media) {
+          for (const media of res.data.Page.media) {
+             const chars = media.characters?.nodes?.filter((c: any) => c.image?.large && !c.image.large.includes('default'));
+             if (chars && chars.length > 0) {
+                const char = chars[Math.floor(Math.random() * chars.length)];
+                loaded.push({
+                  id: media.title.romaji + char.name.full,
+                  name: media.title.romaji,
+                  url: '',
+                  songTitle: char.name.full,
+                  artist: 'Character',
+                  imageUrl: char.image.large,
+                  synonyms: [],
+                  isCharacterMode: true,
+                  characterName: char.name.full
+                });
+             }
+          }
+        }
+        return loaded;
+      }),
+      tap((loadedSongs: AnimeSong[]) => {
+        const uniqueSet = new Set();
+        this.songs = loadedSongs.filter(s => { 
+          if(uniqueSet.has(s.name)) return false; 
+          uniqueSet.add(s.name);
+          return true; 
+        });
+        this.unplayedSongs = [...this.songs];
+        if (this.songs.length === 0) this.errorMessage = 'No characters found.';
+        this.isReady = true;
+        this.isLoading = false;
+      }),
+      map(loadedSongs => loadedSongs.length > 0),
+      catchError(error => {
+        this.errorMessage = error.message || 'Failed to load characters.';
         this.isLoading = false;
         return of(false);
       })

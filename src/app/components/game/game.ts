@@ -17,6 +17,7 @@ import { TOP_ANIME } from '../../services/top_anime';
 export class Game implements OnInit, OnDestroy {
   mode: 'random' | 'top' | 'seasonal' | 'anilist' = 'anilist';
   gameStyle: 'classic' | 'multiple-choice' = 'classic';
+  gameType: 'audio' | 'characters' = 'audio';
   anilistUsername: string = '';
   activeAnilistUsername: string = '';
   isAnilistLoading: boolean = false;
@@ -129,6 +130,10 @@ export class Game implements OnInit, OnDestroy {
     this.gameStyle = newStyle;
   }
 
+  setGameType(newType: 'audio' | 'characters'): void {
+    this.gameType = newType;
+  }
+
   toggleMenu(): void {
     this.isMenuOpen = !this.isMenuOpen;
   }
@@ -172,7 +177,7 @@ export class Game implements OnInit, OnDestroy {
     
     const requestedMode = mode;
 
-    this.songService.loadSongs(30, mode, this.anilistUsername).subscribe({
+    this.songService.loadSongs(30, mode, this.anilistUsername, this.gameType).subscribe({
       next: (success) => {
         if (this.mode !== requestedMode) {
           this.cdr.detectChanges();
@@ -245,8 +250,9 @@ export class Game implements OnInit, OnDestroy {
         this.generateMultipleChoiceOptions();
       }
 
-      this.audio = new Audio(this.currentSong.url);
-      this.audio.volume = this.volume;
+      if (this.gameType === 'audio') {
+        this.audio = new Audio(this.currentSong.url);
+        this.audio.volume = this.volume;
       // Preload data
       this.audio.preload = 'auto';
 
@@ -283,6 +289,10 @@ export class Game implements OnInit, OnDestroy {
       };
       
       this.audio.load();
+      } else {
+        this.isPlaying = true;
+        this.isBuffering = false;
+      }
     }
   }
 
@@ -309,6 +319,7 @@ export class Game implements OnInit, OnDestroy {
   }
 
   togglePlay(): void {
+    if (this.gameType === 'characters') return;
     if (!this.audio) return;
     
     // Se sta già suonando, mettiamo in pausa

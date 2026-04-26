@@ -67,6 +67,26 @@
 
       <!-- Modal Body -->
       <div class="space-y-8 overflow-y-auto max-h-[75vh] pb-8 hide-scrollbar">
+        <!-- Game Type -->
+        <div>
+          <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">Game Type</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button (click)="setGameType('audio')"
+              [ngClass]="gameType === 'audio' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="gameType === 'audio'">Audio</span>
+              <span class="text-base text-zinc-500">Guess from opening songs.</span>
+            </button>
+
+            <button (click)="setGameType('characters')"
+              [ngClass]="gameType === 'characters' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="gameType === 'characters'">Characters</span>
+              <span class="text-base text-zinc-500">Guess from character photos.</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Game Mode -->
         <div>
           <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">Game Mode</span>
@@ -147,6 +167,26 @@
       class="flex-1 flex flex-col justify-center w-full mx-auto animate-fade-in py-2">
       
       <div class="space-y-8">
+        <!-- Game Type -->
+        <div>
+          <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">Game Type</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button (click)="setGameType('audio')"
+              [ngClass]="gameType === 'audio' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="gameType === 'audio'">Audio</span>
+              <span class="text-base text-zinc-500">Guess from opening songs.</span>
+            </button>
+
+            <button (click)="setGameType('characters')"
+              [ngClass]="gameType === 'characters' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="gameType === 'characters'">Characters</span>
+              <span class="text-base text-zinc-500">Guess from character photos.</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Game Mode -->
         <div>
           <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">Game Mode</span>
@@ -267,7 +307,7 @@
       </div>
 
       <!-- Progress Line -->
-      <div class="w-full mt-8 mb-8 relative">
+      <div *ngIf="gameType === 'audio'" class="w-full mt-8 mb-8 relative">
         <div class="w-full h-2 bg-zinc-900 rounded-full relative overflow-hidden">
           <div class="absolute top-0 left-0 h-full bg-emerald-500 z-10 transition-all duration-75 shadow-[0_0_10px_rgba(16,185,129,0.8)]"
             [style.width.%]="(currentTime / 15.0) * 100">
@@ -286,31 +326,41 @@
           </div>
         </ng-container>
       </div>
+      
+      <div *ngIf="gameType === 'characters'" class="w-full h-6"></div>
 
       <!-- Play Button Area -->
       <div class="flex justify-center mb-8 shrink-0">
-        <button (click)="togglePlay()"
-          class="w-20 h-20 shrink-0 rounded-full flex flex-col items-center justify-center transition-all bg-emerald-500 text-white cursor-pointer relative overflow-hidden focus:outline-none shadow-[0_0_50px_-12px_rgba(16,185,129,0.5)] hover:scale-105 hover:bg-emerald-400">
-          <ng-container *ngIf="isBuffering; else iconState">
-            <div class="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-          </ng-container>
-
-          <ng-template #iconState>
-            <ng-container *ngIf="isPlaying; else playIcon">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="currentColor"
-                viewBox="0 0 24 24">
-                <rect x="6" y="5" width="4" height="14" rx="1"></rect>
-                <rect x="14" y="5" width="4" height="14" rx="1"></rect>
-              </svg>
+        <ng-container *ngIf="gameType === 'audio'">
+          <button (click)="togglePlay()"
+            class="w-20 h-20 shrink-0 rounded-full flex flex-col items-center justify-center transition-all bg-emerald-500 text-white cursor-pointer relative overflow-hidden focus:outline-none shadow-[0_0_50px_-12px_rgba(16,185,129,0.5)] hover:scale-105 hover:bg-emerald-400">
+            <ng-container *ngIf="isBuffering; else iconState">
+              <div class="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
             </ng-container>
-            <ng-template #playIcon>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-11 w-11 ml-1 text-white" fill="currentColor"
-                viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
+
+            <ng-template #iconState>
+              <ng-container *ngIf="isPlaying; else playIcon">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="currentColor"
+                  viewBox="0 0 24 24">
+                  <rect x="6" y="5" width="4" height="14" rx="1"></rect>
+                  <rect x="14" y="5" width="4" height="14" rx="1"></rect>
+                </svg>
+              </ng-container>
+              <ng-template #playIcon>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-11 w-11 ml-1 text-white" fill="currentColor"
+                  viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </ng-template>
             </ng-template>
-          </ng-template>
-        </button>
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="gameType === 'characters'">
+          <img [src]="currentSong?.imageUrl" 
+            [style.filter]="gameStyle === 'classic' ? 'blur(' + (maxLevels - level) * 4 + 'px)' : 'none'"
+            class="w-48 h-48 md:w-64 md:h-64 object-cover rounded-2xl shadow-[0_0_40px_rgba(16,185,129,0.2)] border border-zinc-800 transition-all duration-700" />
+        </ng-container>
       </div>
 
       <!-- Classic Input Area -->
@@ -403,9 +453,9 @@
         <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-1">Anime</span>
         <p class="text-3xl font-extrabold text-white mb-6 leading-tight">{{ currentSong?.name }}</p>
 
-        <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-1">Song</span>
+        <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-1">{{ gameType === 'characters' ? 'Character' : 'Song' }}</span>
         <p class="text-xl font-bold text-zinc-300 mb-1 leading-tight">{{ currentSong?.songTitle }}</p>
-        <p class="text-base text-zinc-500 font-medium">{{ currentSong?.artist }}</p>
+        <p *ngIf="gameType === 'audio'" class="text-base text-zinc-500 font-medium">{{ currentSong?.artist }}</p>
       </div>
 
       <button (click)="playNextSongInRound()"
