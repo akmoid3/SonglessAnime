@@ -17,12 +17,14 @@ import { TOP_ANIME } from '../../services/top_anime';
 export class Game implements OnInit, OnDestroy {
   mode: 'random' | 'top' | 'seasonal' | 'anilist' = 'anilist';
   gameStyle: 'classic' | 'multiple-choice' = 'classic';
-  gameType: 'audio' | 'characters' = 'audio';
+  gameType: 'audio' | 'characters' | 'higher-lower-score' | 'higher-lower-pop' = 'audio';
   anilistUsername: string = '';
   activeAnilistUsername: string = '';
   isAnilistLoading: boolean = false;
   
   currentSong: AnimeSong | null = null;
+  nextSong: AnimeSong | null = null;
+  higherLowerState: 'guessing' | 'revealed' = 'guessing';
   multipleChoiceOptions: {name: string, imageUrl: string, isCorrect: boolean}[] = [];
   localAnimeData: {name: string, synonyms: string[], imageUrl: string}[] = [];
   guesses: string[] = [];
@@ -130,7 +132,7 @@ export class Game implements OnInit, OnDestroy {
     this.gameStyle = newStyle;
   }
 
-  setGameType(newType: 'audio' | 'characters'): void {
+  setGameType(newType: 'audio' | 'characters' | 'higher-lower-score' | 'higher-lower-pop'): void {
     this.gameType = newType;
   }
 
@@ -243,6 +245,12 @@ export class Game implements OnInit, OnDestroy {
     this.showWrongFeedback = false;
     this.hasSelectedGuess = false;
     this.gameStatus = 'playing';
+
+    if (this.gameType.startsWith('higher-lower')) {
+      this.nextSong = this.songService.getRandomSong();
+      this.higherLowerState = 'guessing';
+      return;
+    }
     
     if (this.currentSong) {
       this.playedAnimeNames.push(this.currentSong.name);
@@ -430,6 +438,44 @@ export class Game implements OnInit, OnDestroy {
       this.guesses.push(this.guess);
       this.triggerWrongFeedback();
       this.wrongGuessOrSkip();
+    }
+  }
+
+  submitHigherLower(guess: 'higher' | 'lower'): void {
+    if (this.higherLowerState !== 'guessing' || !this.currentSong || !this.nextSong) return;
+    
+    this.higherLowerState = 'revealed';
+    
+    let isCorrect = false;
+    const metric = this.gameType === 'higher-lower-score' ? 'averageScore' : 'popularity';
+    const valA = this.currentSong[metric] || 0;
+    const valB = this.nextSong[metric] || 0;
+
+    if (guess === 'higher') {
+      isCorrect = valB >= valA;
+    } else {
+      isCorrect = valB <= valA;
+    }
+
+    if (isCorrect) {
+      this.score++;
+      setTimeout(() => {
+        if (this.songService.isSongsExhausted()) {
+          this.gameStatus = 'loading';
+          this.cdr.detectChanges();
+          this.loadSongsForGame(this.mode);
+        } else {
+          this.currentSong = this.nextSong;
+          this.nextSong = this.songService.getRandomSong();
+          this.higherLowerState = 'guessing';
+          this.cdr.detectChanges();
+        }
+      }, 2000);
+    } else {
+      setTimeout(() => {
+        this.gameStatus = 'finished';
+        this.cdr.detectChanges();
+      }, 2000);
     }
   }
 

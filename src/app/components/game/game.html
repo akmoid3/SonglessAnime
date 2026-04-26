@@ -84,11 +84,24 @@
               <span class="font-bold text-xl mb-1" [class.text-white]="gameType === 'characters'">Characters</span>
               <span class="text-base text-zinc-500">Guess from character photos.</span>
             </button>
+            <button (click)="setGameType('higher-lower-score')"
+              [ngClass]="gameType === 'higher-lower-score' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="gameType === 'higher-lower-score'">H/L Score</span>
+              <span class="text-base text-zinc-500">Which has a higher score?</span>
+            </button>
+
+            <button (click)="setGameType('higher-lower-pop')"
+              [ngClass]="gameType === 'higher-lower-pop' ? 'bg-zinc-900 border-zinc-500 text-white shadow-lg' : 'bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:bg-zinc-900/60 hover:border-zinc-700'"
+              class="flex flex-col items-start p-5 rounded-2xl border transition-all duration-300 text-left">
+              <span class="font-bold text-xl mb-1" [class.text-white]="gameType === 'higher-lower-pop'">H/L Pop</span>
+              <span class="text-base text-zinc-500">Which is more popular?</span>
+            </button>
           </div>
         </div>
 
         <!-- Game Mode -->
-        <div>
+        <div *ngIf="gameType === 'audio' || gameType === 'characters'">
           <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">Game Mode</span>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button (click)="setMode('anilist')"
@@ -122,7 +135,7 @@
         </div>
 
         <!-- Game Style -->
-        <div>
+        <div *ngIf="gameType === 'audio' || gameType === 'characters'">
           <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">Game Style</span>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button (click)="setGameStyle('classic')"
@@ -142,7 +155,7 @@
         </div>
 
         <!-- AniList Username Input (Modal) -->
-        <div *ngIf="mode === 'anilist'" class="animate-fade-in">
+        <div *ngIf="(gameType === 'audio' || gameType === 'characters') && mode === 'anilist'" class="animate-fade-in">
           <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">AniList Username</span>
           <input type="text" [(ngModel)]="anilistUsername" (keyup.enter)="applySettings()"
             placeholder="Enter your username..."
@@ -188,7 +201,7 @@
         </div>
 
         <!-- Game Mode -->
-        <div>
+        <div *ngIf="gameType === 'audio' || gameType === 'characters'">
           <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">Game Mode</span>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button (click)="setMode('anilist')"
@@ -222,7 +235,7 @@
         </div>
 
         <!-- Game Style -->
-        <div>
+        <div *ngIf="gameType === 'audio' || gameType === 'characters'">
           <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">Game Style</span>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button (click)="setGameStyle('classic')"
@@ -242,7 +255,7 @@
         </div>
 
         <!-- AniList Username Input -->
-        <div *ngIf="mode === 'anilist'" class="animate-fade-in">
+        <div *ngIf="(gameType === 'audio' || gameType === 'characters') && mode === 'anilist'" class="animate-fade-in">
           <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">AniList Username</span>
           <input type="text" [(ngModel)]="anilistUsername" (keyup.enter)="startGameFromSetup()"
             placeholder="Enter your username..."
@@ -285,13 +298,13 @@
       <!-- Round Info -->
       <div
         class="flex justify-between items-center text-xs font-bold tracking-widest text-zinc-500 uppercase mb-4 w-full px-2">
-        <div>Round <span class="text-zinc-100 ml-2 text-base">{{ currentRound }} <span class="text-zinc-700 font-normal">/</span> {{ maxRounds }}</span>
+        <div *ngIf="!gameType.startsWith('higher-lower')">Round <span class="text-zinc-100 ml-2 text-base">{{ currentRound }} <span class="text-zinc-700 font-normal">/</span> {{ maxRounds }}</span>
         </div>
-        <div>Score <span class="text-emerald-500 ml-2 text-base">{{ score }}</span></div>
+        <div>{{ gameType.startsWith('higher-lower') ? 'Streak' : 'Score' }} <span class="text-emerald-500 ml-2 text-base">{{ score }}</span></div>
       </div>
 
       <!-- Guess List (Classic) -->
-      <div *ngIf="gameStyle === 'classic'" class="w-full flex flex-col gap-2 mb-6">
+      <div *ngIf="gameStyle === 'classic' && !gameType.startsWith('higher-lower')" class="w-full flex flex-col gap-2 mb-6">
         <div *ngFor="let item of [].constructor(maxLevels); let i = index"
           class="h-10 w-full rounded-xl flex items-center px-4 font-semibold text-base transition-all"
           [ngClass]="{
@@ -330,7 +343,7 @@
       <div *ngIf="gameType === 'characters'" class="w-full h-6"></div>
 
       <!-- Play Button Area -->
-      <div class="flex justify-center mb-8 shrink-0">
+      <div *ngIf="!gameType.startsWith('higher-lower')" class="flex justify-center mb-8 shrink-0">
         <ng-container *ngIf="gameType === 'audio'">
           <button (click)="togglePlay()"
             class="w-20 h-20 shrink-0 rounded-full flex flex-col items-center justify-center transition-all bg-emerald-500 text-white cursor-pointer relative overflow-hidden focus:outline-none shadow-[0_0_50px_-12px_rgba(16,185,129,0.5)] hover:scale-105 hover:bg-emerald-400">
@@ -364,7 +377,7 @@
       </div>
 
       <!-- Classic Input Area -->
-      <ng-container *ngIf="gameStyle === 'classic'">
+      <ng-container *ngIf="gameStyle === 'classic' && !gameType.startsWith('higher-lower')">
         <div class="w-full flex flex-col gap-4">
           <div class="relative w-full">
             <div
@@ -407,7 +420,7 @@
       </ng-container>
 
       <!-- Multiple Choice Area -->
-      <ng-container *ngIf="gameStyle === 'multiple-choice'">
+      <ng-container *ngIf="gameStyle === 'multiple-choice' && !gameType.startsWith('higher-lower')">
         <div class="w-full flex flex-col gap-4 md:grid md:grid-cols-2"
           [ngClass]="{'animate-pulse': showWrongFeedback}">
           <button *ngFor="let opt of multipleChoiceOptions" (click)="submitMultipleChoice(opt)"
@@ -438,6 +451,65 @@
             </ng-container>
 
           </button>
+        </div>
+      </ng-container>
+      <!-- Higher/Lower Area -->
+      <ng-container *ngIf="gameType.startsWith('higher-lower')">
+        <div class="w-full flex flex-col md:flex-row gap-6 md:gap-4 justify-center items-stretch min-h-[60vh]">
+          
+          <!-- Anime A -->
+          <div class="flex-1 bg-zinc-900/30 border border-zinc-800 rounded-3xl p-6 flex flex-col items-center justify-center text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute inset-0 z-0 opacity-20">
+              <img [src]="currentSong?.imageUrl" class="w-full h-full object-cover blur-xl" />
+            </div>
+            <div class="relative z-10 flex flex-col items-center">
+              <img [src]="currentSong?.imageUrl" class="w-32 h-48 md:w-48 md:h-72 object-cover rounded-xl shadow-2xl mb-6 border border-zinc-700" />
+              <h3 class="text-2xl md:text-3xl font-black text-white mb-2 line-clamp-3">{{ currentSong?.name }}</h3>
+              <p class="text-zinc-400 font-bold uppercase tracking-widest text-sm mb-4">has a</p>
+              <div class="text-4xl md:text-5xl font-black text-emerald-400 drop-shadow-lg">
+                {{ gameType === 'higher-lower-score' ? currentSong?.averageScore + '%' : (currentSong?.popularity | number) }}
+              </div>
+              <p class="text-zinc-500 font-bold uppercase tracking-widest mt-2">{{ gameType === 'higher-lower-score' ? 'Score' : 'Members' }}</p>
+            </div>
+          </div>
+
+          <!-- VS Badge -->
+          <div class="hidden md:flex flex-col justify-center items-center -mx-4 z-20">
+            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-black font-black text-xl shadow-2xl">VS</div>
+          </div>
+
+          <!-- Anime B -->
+          <div class="flex-1 bg-zinc-900/30 border border-zinc-800 rounded-3xl p-6 flex flex-col items-center justify-center text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute inset-0 z-0 opacity-20">
+              <img [src]="nextSong?.imageUrl" class="w-full h-full object-cover blur-xl" />
+            </div>
+            <div class="relative z-10 flex flex-col items-center w-full">
+              <img [src]="nextSong?.imageUrl" class="w-32 h-48 md:w-48 md:h-72 object-cover rounded-xl shadow-2xl mb-6 border border-zinc-700" />
+              <h3 class="text-2xl md:text-3xl font-black text-white mb-2 line-clamp-3">{{ nextSong?.name }}</h3>
+              <p class="text-zinc-400 font-bold uppercase tracking-widest text-sm mb-4">has a</p>
+              
+              <!-- Buttons -->
+              <div *ngIf="higherLowerState === 'guessing'" class="flex flex-col gap-3 w-full max-w-[200px]">
+                <button (click)="submitHigherLower('higher')"
+                  class="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-black py-4 rounded-xl text-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7" /></svg>
+                  Higher
+                </button>
+                <button (click)="submitHigherLower('lower')"
+                  class="w-full bg-red-500 hover:bg-red-400 text-white font-black py-4 rounded-xl text-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>
+                  Lower
+                </button>
+              </div>
+
+              <!-- Revealed Stat -->
+              <div *ngIf="higherLowerState === 'revealed'" class="text-4xl md:text-5xl font-black text-white drop-shadow-lg animate-fade-in flex flex-col items-center">
+                {{ gameType === 'higher-lower-score' ? nextSong?.averageScore + '%' : (nextSong?.popularity | number) }}
+                <p class="text-zinc-500 font-bold uppercase tracking-widest mt-2 text-base">{{ gameType === 'higher-lower-score' ? 'Score' : 'Members' }}</p>
+              </div>
+            </div>
+          </div>
+          
         </div>
       </ng-container>
     </div>
@@ -476,14 +548,19 @@
     <div *ngIf="gameStatus === 'finished'"
       class="flex-1 flex flex-col items-center justify-center text-center animate-fade-in w-full pb-6">
       
-      <span class="text-sm font-bold tracking-widest text-zinc-500 uppercase mb-6">Round Complete</span>
+      <span class="text-sm font-bold tracking-widest text-zinc-500 uppercase mb-6">{{ gameType.startsWith('higher-lower') ? 'Game Over' : 'Round Complete' }}</span>
       
       <div class="flex flex-col items-center mb-12">
         <div class="text-[9rem] font-black text-white leading-none tracking-tighter drop-shadow-2xl">
-          {{ score }}<span class="text-5xl text-zinc-700">/{{ maxRounds }}</span>
+          {{ score }}<span *ngIf="!gameType.startsWith('higher-lower')" class="text-5xl text-zinc-700">/{{ maxRounds }}</span>
         </div>
         <p class="text-2xl text-emerald-500 font-bold mt-8">
-          {{ score === maxRounds ? 'Perfect Score!' : score > maxRounds / 2 ? 'Great job!' : 'Better luck next time.' }}
+          <ng-container *ngIf="!gameType.startsWith('higher-lower')">
+            {{ score === maxRounds ? 'Perfect Score!' : score > maxRounds / 2 ? 'Great job!' : 'Better luck next time.' }}
+          </ng-container>
+          <ng-container *ngIf="gameType.startsWith('higher-lower')">
+            {{ score > 10 ? 'Unbelievable streak!' : score > 5 ? 'Great streak!' : 'You can do better!' }}
+          </ng-container>
         </p>
       </div>
 

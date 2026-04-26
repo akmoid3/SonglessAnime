@@ -12,6 +12,8 @@ export interface AnimeSong {
   synonyms?: string[];
   characterName?: string;
   isCharacterMode?: boolean;
+  averageScore?: number;
+  popularity?: number;
 }
 
 import { TOP_ANIME } from './top_anime';
@@ -95,12 +97,15 @@ export class SongService { private usedTopAnimes=new Set<string>();
     });
   }
 
-  loadSongs(amount: number = 20, mode: 'random' | 'top' | 'seasonal' | 'anilist' = 'random', anilistUsername?: string, gameType: 'audio' | 'characters' = 'audio'): Observable<boolean> {
+  loadSongs(amount: number = 20, mode: 'random' | 'top' | 'seasonal' | 'anilist' = 'random', anilistUsername?: string, gameType: 'audio' | 'characters' | 'higher-lower-score' | 'higher-lower-pop' = 'audio'): Observable<boolean> {
     this.isLoading = true;
     this.errorMessage = '';
     
     // Ricarichiamo il pool in background in modo da avere sempre nuove esche per i quiz
     this.ensureWrongAnswersPool(mode);
+
+    if (gameType === 'higher-lower-score') return this.loadHigherLowerAnime('score');
+    if (gameType === 'higher-lower-pop') return this.loadHigherLowerAnime('popularity');
 
     if (gameType === 'characters') {
       if (mode === 'top') return this.loadTopCharacters();
@@ -595,6 +600,66 @@ export class SongService { private usedTopAnimes=new Set<string>();
       map(loadedSongs => loadedSongs.length > 0),
       catchError(error => {
         this.errorMessage = error.message || 'Failed to load characters.';
+        this.isLoading = false;
+        return of(false);
+      })
+    );
+  }
+
+  public loadHigherLowerAnime(metric: 'score' | 'popularity'): Observable<boolean> {
+    this.isLoading = true;
+    this.isReady = false;
+    this.errorMessage = '';
+
+    const query = `
+      query {
+        Page(page: ${Math.floor(Math.random() * 5) + 1}, perPage: 50) {
+          media(type: ANIME, sort: POPULARITY_DESC, isAdult: false) {
+            id
+            title { romaji english }
+            coverImage { extraLarge }
+            averageScore
+            popularity
+          }
+        }
+      }
+    `;
+
+    return this.http.post<any>('https://graphql.anilist.co', { query }).pipe(
+      timeout(10000),
+      map(res => {
+        const loaded: AnimeSong[] = [];
+        if (res?.data?.Page?.media) {
+          for (const media of res.data.Page.media) {
+             if (media.averageScore && media.popularity) {
+                loaded.push({
+                  id: media.id.toString(),
+                  name: media.title.romaji || media.title.english || 'Unknown',
+                  url: '',
+                  imageUrl: media.coverImage?.extraLarge,
+                  averageScore: media.averageScore,
+                  popularity: media.popularity
+                });
+             }
+          }
+        }
+        return loaded;
+      }),
+      tap((loadedSongs: AnimeSong[]) => {
+        // shuffle array
+        for (let i = loadedSongs.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [loadedSongs[i], loadedSongs[j]] = [loadedSongs[j], loadedSongs[i]];
+        }
+        this.songs = loadedSongs;
+        this.unplayedSongs = [...this.songs];
+        if (this.songs.length === 0) this.errorMessage = 'No anime found.';
+        this.isReady = true;
+        this.isLoading = false;
+      }),
+      map(loadedSongs => loadedSongs.length > 0),
+      catchError(error => {
+        this.errorMessage = error.message || 'Failed to load anime stats.';
         this.isLoading = false;
         return of(false);
       })
