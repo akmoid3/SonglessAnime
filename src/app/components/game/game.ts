@@ -176,7 +176,7 @@ export class Game implements OnInit, OnDestroy {
     
     this.gameStatus = 'loading';
     this.cdr.detectChanges();
-    this.loadSongsForGame(this.mode);
+    this.loadSongsForGame(this.mode as any);
   }
 
   private loadSongsForGame(mode: 'random' | 'top' | 'seasonal' | 'anilist'): void {
@@ -187,7 +187,7 @@ export class Game implements OnInit, OnDestroy {
     
     const requestedMode = mode;
 
-    this.songService.loadSongs(30, mode, this.anilistUsername, this.gameType).subscribe({
+    this.songService.loadSongs(30, mode, this.anilistUsername, this.gameType as any).subscribe({
       next: (success) => {
         if (this.mode !== requestedMode) {
           this.cdr.detectChanges();
@@ -235,7 +235,7 @@ export class Game implements OnInit, OnDestroy {
       this.stopAudio();
       this.gameStatus = 'loading';
       this.cdr.detectChanges();
-      this.loadSongsForGame(this.mode);
+      this.loadSongsForGame(this.mode as any);
       return; // "loadSongsForGame" richiamerà startNewGame() da solo quando finirà il download.
     }
 
@@ -471,7 +471,7 @@ export class Game implements OnInit, OnDestroy {
         if (this.songService.isSongsExhausted()) {
           this.gameStatus = 'loading';
           this.cdr.detectChanges();
-          this.loadSongsForGame(this.mode);
+          this.loadSongsForGame(this.mode as any);
         } else {
           this.currentSong = this.nextSong;
           this.nextSong = this.songService.getRandomSong();

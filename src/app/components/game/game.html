@@ -215,7 +215,7 @@
         </div>
 
         <!-- Game Mode -->
-        <div *ngIf="(gameType === 'audio' || gameType === 'characters') && gameType !== ''" class="animate-fade-in">
+        <div *ngIf="gameType === 'audio' || gameType === 'characters'" class="animate-fade-in">
           <span class="text-xs font-bold tracking-widest text-zinc-500 uppercase mb-3 block">Game Mode</span>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button (click)="setMode('anilist')"
