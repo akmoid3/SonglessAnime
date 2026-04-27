@@ -137,6 +137,12 @@ export class Game implements OnInit, OnDestroy {
   }
 
   setGameType(newType: 'audio' | 'characters' | 'higher-lower-score' | 'higher-lower-pop'): void {
+    // Reset mode e gameStyle se si cambia tipo, per evitare valori "fantasma"
+    // che potrebbero bloccare il pulsante Start
+    if (this.gameType !== newType) {
+      this.mode = '';
+      this.gameStyle = '';
+    }
     this.gameType = newType;
   }
 
